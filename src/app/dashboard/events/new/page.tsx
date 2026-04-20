@@ -17,7 +17,7 @@ const eventSchema = z.object({
   }),
   venue: z.string().min(2, "Venue is required"),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
-  feeCents: z.preprocess((v) => Number(v), z.number().min(0, "Fee cannot be negative")),
+  feeCents: z.number().min(0, "Fee cannot be negative"),
   coverImage: z.string().optional(),
 });
 
@@ -84,7 +84,7 @@ export default function CreateEventPage() {
 
             <div>
               <label className="block text-[13px] font-medium text-foreground mb-1.5">Registration fee (cents, 0 = free)</label>
-              <input type="number" min={0} {...register("feeCents")} placeholder="0" className={inputStyle} />
+              <input type="number" min={0} {...register("feeCents", { valueAsNumber: true })} placeholder="0" className={inputStyle} />
               {errors.feeCents && <p className="text-[12px] text-danger mt-1">{errors.feeCents.message}</p>}
             </div>
 

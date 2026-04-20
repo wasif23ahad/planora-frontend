@@ -17,7 +17,7 @@ const eventSchema = z.object({
   venue: z.string().min(2, "Venue is required"),
   category: z.string().min(1, "Please select a category"),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
-  feeCents: z.coerce.number().min(0, "Fee cannot be negative"),
+  feeCents: z.number().min(0, "Fee cannot be negative"),
 });
 
 type EventForm = z.infer<typeof eventSchema>;
@@ -149,7 +149,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Input label="Fee (Amount in Cents)" type="number" {...register("feeCents")} error={errors.feeCents?.message} />
+          <Input label="Fee (Amount in Cents)" type="number" {...register("feeCents", { valueAsNumber: true })} error={errors.feeCents?.message} />
           <div className="space-y-2">
             <label className="text-[14px] font-bold text-foreground">Visibility</label>
             <div className="flex gap-4 pt-1">
