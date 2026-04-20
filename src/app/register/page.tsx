@@ -72,7 +72,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[calc(100vh-60px)] flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-[400px] bg-white rounded-2xl border border-border-base p-10 sm:p-12 shadow-sm">
+      <div className="w-full max-w-100 bg-white rounded-2xl border border-border-base p-10 sm:p-12 shadow-sm">
         <div className="text-center mb-8">
           <div className="text-[22px] font-bold tracking-tight mb-1.5 font-tight text-foreground">Planora</div>
           <p className="text-[13px] text-muted font-medium italic">Create your account.</p>
