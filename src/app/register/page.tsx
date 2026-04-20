@@ -7,6 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -23,6 +26,10 @@ type FormData = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { login } = useAuth();
+  const router = useRouter();
 
   const {
     register,
@@ -32,17 +39,35 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    console.log("Register data:", data);
-    // Mocking API call for F3 verification
-    setTimeout(() => {
-      setIsLoading(false);
+    setError(null);
+    try {
+      // 1. Submit registration
+      await api.post("/auth/register", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+
+      // 2. Automatically log them in after registration
+      const loginRes = await api.post("/auth/login", {
+        email: data.email,
+        password: data.password,
+      });
+
+      login(loginRes.data.token, loginRes.data.user);
+      
       setSuccess(true);
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       }, 900);
-    }, 1200);
+    } catch (err: any) {
+      const message = err.response?.data?.error?.message || "Registration failed. Please try again.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,13 +79,19 @@ export default function RegisterPage() {
         </div>
 
         {success ? (
-          <div className="text-center py-5">
+          <div className="text-center py-5 animate-in fade-in zoom-in duration-300">
             <div className="text-[28px] mb-3 text-success">✓</div>
             <div className="text-[15px] font-bold text-success">Account created!</div>
             <p className="text-[13px] text-muted mt-1.5">Redirecting to dashboard...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 text-danger border border-red-100 rounded-lg p-3 text-[13px] text-center mb-4">
+                {error}
+              </div>
+            )}
+
             <Input
               label="Full name"
               placeholder="Sadia Islam"
@@ -90,7 +121,7 @@ export default function RegisterPage() {
             />
 
             <Button type="submit" className="w-full h-[42px] mt-2 font-semibold" disabled={isLoading}>
-              {isLoading ? "Please wait..." : "Create account"}
+              {isLoading ? "Creating account..." : "Create account"}
             </Button>
 
             <div className="text-center mt-5 text-[13px] text-muted">
