@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+:root {
+  /* Core Design Tokens from js/shared.jsx */
+  --background: #FAFAF7;
+  --foreground: #111111;
+  --foreground-muted: #5B5B58;
+  --border: #E8E6E0;
+  --accent: #3B2BFF;
+  --accent-foreground: #FFFFFF;
+  
+  --success: #0F7B5A;
+  --warning: #B4600E;
+  --danger: #B4302E;
+  
+  /* Additional tokens from Planora.html */
+  --card-radius: 12px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--foreground-muted);
+  --color-border-base: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  
+  --radius-card: var(--card-radius);
+  
+  --font-sans: "Inter", var(--font-inter), sans-serif;
+  --font-tight: "Inter Tight", var(--font-inter), sans-serif;
+}
+
+/* Global Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar matching the premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+* {
+  text-wrap: pretty;
+}
