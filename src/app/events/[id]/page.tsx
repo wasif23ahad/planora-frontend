@@ -16,7 +16,7 @@ interface Review {
   createdAt: string;
 }
 
-interface EventDetail extends ProjectDataType {
+interface EventDetail {
   id: string;
   title: string;
   description: string;
@@ -70,19 +70,22 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
       router.push("/login");
       return;
     }
-    
-    if (isPaid) {
-      // Step F9 will handle real Stripe redirect
-      router.push(`/events/${id}/checkout`);
-      return;
-    }
 
     setJoining(true);
     try {
-      await api.post(`/events/${id}/join`);
-      window.location.reload(); // Refresh to show "Joined" state
-    } catch (error) {
+      const { data } = await api.post(`/events/${id}/join`);
+      
+      // If it's a paid event, backend returns { url: "stripe_url_here" }
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // If it's a free event, backend returns the registration info
+      window.location.reload();
+    } catch (error: any) {
       console.error("Failed to join event:", error);
+      alert(error.response?.data?.error?.message || "Something went wrong. Please try again.");
     } finally {
       setJoining(false);
     }
@@ -100,7 +103,7 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="flex-1 space-y-6">
-            <CategoryPill type={event.visibility === "PUBLIC" ? "public" : "private"} fee={event.feeCents} />
+            <CategoryPill type={event.visibility === "PUBLIC" ? "public" : "private"} feePercent={event.feeCents} />
             <h1 className="text-[32px] font-bold text-foreground tracking-tight font-tight leading-[1.1]">
               {event.title}
             </h1>
