@@ -22,10 +22,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased flex flex-col min-h-screen`}>
+      <body className={`${inter.variable} font-sans bg-background text-foreground flex flex-col min-h-screen`}>
         <AuthProvider>
           <Navbar />
-          <main className="pt-[60px] flex-grow">
+          <main className="grow animate-fade-in">
             {children}
           </main>
           <Footer />

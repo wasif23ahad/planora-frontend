@@ -44,8 +44,8 @@ export default function UserModerationPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-border-base rounded-2xl overflow-hidden shadow-sm">
-        <table className="w-full text-left">
+      <div className="bg-white border border-border-base rounded-2xl overflow-x-auto shadow-sm">
+        <table className="w-full text-left min-w-[800px]">
           <thead>
             <tr className="bg-muted/5 border-b border-border-base">
               <th className="px-6 py-4 text-[12px] font-bold text-muted uppercase tracking-wider">User</th>

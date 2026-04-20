@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-[calc(100vh-60px)] bg-background">
       {/* ── SIDEBAR ─────────────────────────────────────── */}
       <aside className="w-[280px] border-r border-border-base bg-white hidden lg:flex flex-col">
-        <div className="p-8 flex-grow">
+        <div className="p-8 grow">
           <div className="space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* ── MAIN CONTENT ─────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="grow overflow-y-auto animate-fade-in p-10">
         <div className="max-w-[1000px] mx-auto p-8 lg:p-12">
           {children}
         </div>

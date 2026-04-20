@@ -66,12 +66,12 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-background min-h-screen pb-24">
+    <div className="bg-background min-h-screen pb-24 animate-fade-in">
       {/* ── HERO ──────────────────────────────────────────── */}
       {featured && (
         <section className="max-w-[1200px] mx-auto px-8 py-24 sm:py-32">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted/10 border border-border-base flex items-center justify-center relative shadow-sm group">
+            <div className="aspect-4/3 rounded-3xl overflow-hidden mb-6 relative group shadow-sm bg-muted/5 border border-border-base">
               {featured.coverImage ? (
                 <img
                   src={featured.coverImage}
@@ -79,12 +79,12 @@ export default function Home() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               ) : (
-                <div className="text-[12px] font-mono text-muted/30 uppercase tracking-[0.2em]">featured event</div>
+                <div className="text-[12px] font-mono text-muted/30 uppercase tracking-[0.2em] flex items-center justify-center h-full">featured event</div>
               )}
             </div>
 
             <div className="space-y-6">
-              <CategoryPill type={featured.visibility === "PUBLIC" ? "public" : "private"} fee={featured.feeCents} />
+              <CategoryPill type={featured.visibility === "PUBLIC" ? "public" : "private"} feePercent={featured.feeCents} />
               <h1 className="text-[48px] font-bold text-foreground tracking-[-0.03em] leading-[1.05] font-tight max-w-[500px]">
                 {featured.title}
               </h1>
@@ -117,7 +117,7 @@ export default function Home() {
           Upcoming events
         </SectionTitle>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
           {upcoming.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
@@ -149,8 +149,8 @@ export default function Home() {
         </div>
 
         {filterLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-pulse">
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-[300px] bg-muted/5 rounded-radius-card border border-border-base" />
             ))}
           </div>
@@ -159,7 +159,7 @@ export default function Home() {
             <p className="text-muted text-[14px] font-medium">No events in this category yet. Check back soon!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-slide-up">
             {filteredEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}

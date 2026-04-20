@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-[calc(100vh-60px)] bg-muted/5">
       {/* ── SIDEBAR ─────────────────────────────────────── */}
       <aside className="w-[280px] border-r border-border-base bg-white hidden lg:flex flex-col shadow-sm">
-        <div className="p-8 flex-grow space-y-6">
+        <div className="p-8 grow space-y-6">
           <div className="px-4">
             <h2 className="text-[11px] font-bold text-muted uppercase tracking-[0.2em] mb-4">Administration</h2>
             <div className="space-y-1">
@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* ── MAIN CONTENT ─────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="grow overflow-y-auto">
         <div className="max-w-[1240px] mx-auto p-12">
           {children}
         </div>

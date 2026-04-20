@@ -28,8 +28,7 @@ export function Navbar() {
   if (isAuthPage) return null;
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-[100] bg-background transition-colors duration-200 ${
+    <nav className={`fixed top-0 left-0 right-0 h-[60px] flex items-center transition-all duration-300 z-100 ${
         scrolled ? "border-b border-border-base" : "border-b border-transparent"
       }`}
     >
