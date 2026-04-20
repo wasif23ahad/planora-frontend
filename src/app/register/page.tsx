@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
+import { isAxiosError } from "axios";
 import { useRouter } from "next/navigation";
 
 const registerSchema = z.object({
@@ -62,8 +63,10 @@ export default function RegisterPage() {
       setTimeout(() => {
         router.push("/dashboard");
       }, 900);
-    } catch (err: any) {
-      const message = err.response?.data?.error?.message || "Registration failed. Please try again.";
+    } catch (err: unknown) {
+      const message = isAxiosError<{ error?: { message?: string } }>(err)
+        ? err.response?.data?.error?.message || "Registration failed. Please try again."
+        : "Registration failed. Please try again.";
       setError(message);
     } finally {
       setIsLoading(false);
