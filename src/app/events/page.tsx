@@ -1,177 +1,180 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { SectionTitle } from "@/components/ui/SectionTitle";
-import { EventCard, EventData } from "@/components/events/EventCard";
-import { Input } from "@/components/ui/Input";
+import React, { useState, useEffect } from "react";
 import api from "@/lib/api";
-
-const categories = [
-  { value: "all", label: "All Categories" },
-  { value: "public-free", label: "Public Free" },
-  { value: "public-paid", label: "Public Paid" },
-  { value: "private-free", label: "Private Free" },
-  { value: "private-paid", label: "Private Paid" },
-];
-
-const sortOptions = [
-  { value: "recent", label: "Most Recent" },
-  { value: "featured", label: "Featured First" },
-  { value: "price_high", label: "Price: High to Low" },
-  { value: "price_low", label: "Price: Low to High" },
-];
+import { EventCard } from "@/components/events/EventCard";
 
 export default function EventsListingPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // State
-  const [events, setEvents] = useState<EventData[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState(searchParams.get("q") || "");
-
-  // Params
-  const page = parseInt(searchParams.get("page") || "1");
-  const category = searchParams.get("category") || "all";
-  const sort = searchParams.get("sort") || "recent";
-  const limit = 9;
-
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (category !== "all") params.append("category", category);
-      params.append("sort", sort);
-      params.append("page", page.toString());
-      params.append("limit", limit.toString());
-
-      const { data } = await api.get(`/events?${params.toString()}`);
-      setEvents(data.items);
-      setTotal(data.total);
-    } catch (error) {
-      console.error("Failed to fetch events:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [search, category, sort, page]);
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<Record<string, boolean>>({
+    "public-free": false,
+    "public-paid": false,
+    "private-free": false,
+    "private-paid": false,
+  });
+  const [sort, setSort] = useState("date");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PER_PAGE = 6;
 
   useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const { data } = await api.get("/events");
+        setEvents(data);
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchEvents();
-  }, [fetchEvents]);
+  }, []);
 
-  // Handle filter changes
-  const updateParams = (newParams: Record<string, string>) => {
-    const fresh = new URLSearchParams(searchParams.toString());
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value) fresh.set(key, value);
-      else fresh.delete(key);
-    });
-    fresh.set("page", "1"); // Reset to page 1 on filter
-    router.push(`/events?${fresh.toString()}`);
-  };
+  const anyFilter = Object.values(filters).some(Boolean);
+  const filtered = events.filter((e) => {
+    const key = `${e.visibility}-${e.feeCents === 0 ? "free" : "paid"}`;
+    const matchFilter = !anyFilter || filters[key];
+    const matchSearch = !search || 
+      e.title.toLowerCase().includes(search.toLowerCase()) || 
+      e.owner?.name.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
 
-  const totalPages = Math.ceil(total / limit);
+  const sorted = [...filtered].sort((a, b) => {
+    if (sort === "fee") return a.feeCents - b.feeCents;
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
+
+  const totalPages = Math.ceil(sorted.length / PER_PAGE);
+  const paged = sorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+  const toggleFilter = (k: string) => setFilters(f => ({ ...f, [k]: !f[k] }));
+
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted font-medium">Discovering events…</div>;
 
   return (
-    <div className="bg-background min-h-screen py-16 px-8">
-      <div className="max-w-[1200px] mx-auto">
-        <SectionTitle>Discover events</SectionTitle>
-
-        {/* ── FILTERS & SEARCH ───────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12 items-end">
-          <div className="lg:col-span-2">
-            <Input
-              label="Search"
-              placeholder="Search by title or venue..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                // Debounce would be better, but this handles simple real-time
-                const fresh = new URLSearchParams(searchParams.toString());
-                if (e.target.value) fresh.set("q", e.target.value);
-                else fresh.delete("q");
-                fresh.set("page", "1");
-                router.push(`/events?${fresh.toString()}`);
-              }}
-            />
-          </div>
-          
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-foreground">Category</label>
-            <select
-              value={category}
-              onChange={(e) => updateParams({ category: e.target.value })}
-              className="w-full h-[42px] px-3.5 border border-border-base rounded-lg text-[14px] bg-white outline-none focus:border-accent"
-            >
-              {categories.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-foreground">Sort By</label>
-            <select
-              value={sort}
-              onChange={(e) => updateParams({ sort: e.target.value })}
-              className="w-full h-[42px] px-3.5 border border-border-base rounded-lg text-[14px] bg-white outline-none focus:border-accent"
-            >
-              {sortOptions.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
+    <div className="bg-background min-h-screen pt-20 font-sans">
+      <div className="max-w-[1200px] mx-auto px-8 py-12">
+        
+        {/* Page Header */}
+        <div className="mb-10">
+          <h1 className="text-[36px] font-bold text-foreground font-tight tracking-[-0.03em] mb-1.5">All events</h1>
+          <div className="text-[14px] text-muted">{filtered.length} events found</div>
         </div>
 
-        {/* ── GRID ──────────────────────────────────────────── */}
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-[300px] bg-muted/5 rounded-radius-card border border-border-base" />
-            ))}
-          </div>
-        ) : events.length === 0 ? (
-          <div className="py-32 text-center bg-white rounded-2xl border border-border-base shadow-sm">
-            <div className="text-[20px] mb-2">🔍</div>
-            <p className="text-muted text-[14px] font-medium">No events matches your search or filters.</p>
-            <button 
-              onClick={() => router.push("/events")} 
-              className="mt-4 text-accent font-bold text-[13px] hover:underline"
-            >
-              Clear all filters
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-              {events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+        {/* Search Bar */}
+        <div className="mb-10 relative group">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-[20px] pointer-events-none group-focus-within:text-accent transition-colors">⌕</span>
+          <input 
+            value={search} 
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+            placeholder="Search by title or organizer…"
+            className="w-full h-[44px] pl-11 pr-4 border border-border-base rounded-[10px] text-[14px] bg-white text-foreground font-inherit outline-none focus:border-accent transition-colors"
+          />
+        </div>
 
-            {/* ── PAGINATION ─────────────────────────────────── */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => updateParams({ page: pageNum.toString() })}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-[13px] font-bold transition-all
-                      ${page === pageNum 
-                        ? "bg-accent text-white shadow-sm" 
-                        : "bg-white border border-border-base text-muted hover:border-accent hover:text-accent"}
-                    `}
-                  >
-                    {pageNum}
-                  </button>
+        <div className="grid grid-cols-[220px_1fr] gap-10 items-start">
+          {/* ── SIDEBAR ────────────────────────────────────── */}
+          <aside className="bg-white rounded-[12px] border border-border-base p-6 sticky top-20 shadow-sm">
+            <div className="text-[12px] font-semibold text-muted uppercase tracking-[0.07em] mb-4">Category</div>
+            {[
+              { key: "public-free",  label: "Public Free" },
+              { key: "public-paid",  label: "Public Paid" },
+              { key: "private-free", label: "Private Free" },
+              { key: "private-paid", label: "Private Paid" },
+            ].map(f => (
+              <label key={f.key} className="flex items-center gap-2 mb-3 cursor-pointer text-[14px] text-foreground hover:text-accent transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={filters[f.key]} 
+                  onChange={() => toggleFilter(f.key)}
+                  className="accent-accent w-[15px] h-[15px]" 
+                />
+                {f.label}
+              </label>
+            ))}
+
+            <div className="border-t border-border-base my-5" />
+
+            <div className="text-[12px] font-semibold text-muted uppercase tracking-[0.07em] mb-3">Sort by</div>
+            {[
+              { value: "date", label: "Date" },
+              { value: "fee", label: "Fee (low to high)" }
+            ].map(s => (
+              <label key={s.value} className="flex items-center gap-2 mb-2.5 cursor-pointer text-[14px] text-foreground hover:text-accent transition-colors">
+                <input 
+                  type="radio" 
+                  name="sort" 
+                  checked={sort === s.value} 
+                  onChange={() => setSort(s.value)}
+                  className="accent-accent" 
+                />
+                {s.label}
+              </label>
+            ))}
+
+            {anyFilter && (
+              <>
+                <div className="border-t border-border-base my-5" />
+                <button 
+                  onClick={() => setFilters({"public-free":false,"public-paid":false,"private-free":false,"private-paid":false})}
+                  className="text-[13px] text-muted underline cursor-pointer hover:text-foreground transition-colors"
+                >
+                  Clear filters
+                </button>
+              </>
+            )}
+          </aside>
+
+          {/* ── EVENT GRID ─────────────────────────────────── */}
+          <div>
+            {paged.length === 0 ? (
+              <div className="text-center py-16 text-muted">
+                <div className="text-[32px] mb-3">○</div>
+                <div className="text-[16px] font-medium mb-2 text-foreground">No events found</div>
+                <div className="text-[14px]">Try adjusting your search or filters.</div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {paged.map(e => (
+                  <EventCard key={e.id} event={e} />
                 ))}
               </div>
             )}
-          </>
-        )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex gap-2 mt-10 justify-center items-center">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                  disabled={currentPage === 1}
+                  className="px-4 py-1.5 rounded-lg border border-border-base bg-white text-[13px] font-medium disabled:opacity-40 hover:bg-muted/5 transition-colors cursor-pointer"
+                >
+                  ← Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                  <button 
+                    key={n} 
+                    onClick={() => setCurrentPage(n)}
+                    className={`w-9 h-9 rounded-lg border text-[13px] font-bold transition-all cursor-pointer 
+                      ${n === currentPage ? "bg-accent border-accent text-white" : "bg-white border-border-base text-foreground hover:border-accent"}`}
+                  >
+                    {n}
+                  </button>
+                ))}
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-1.5 rounded-lg border border-border-base bg-white text-[13px] font-medium disabled:opacity-40 hover:bg-muted/5 transition-colors cursor-pointer"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

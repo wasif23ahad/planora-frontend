@@ -12,22 +12,25 @@ export function Button({
   className = "",
   ...props
 }: ButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center font-medium transition-opacity duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-inherit";
-  
   const variants = {
-    primary: "bg-accent text-white",
+    primary: "bg-accent text-white border-none",
     secondary: "bg-transparent text-foreground border border-border-base",
-    ghost: "bg-transparent text-muted underline",
-    danger: "bg-danger text-white",
-    success: "bg-success text-white",
+    ghost: "bg-transparent text-muted underline border-none", // ghost in root has underline
+    danger: "bg-danger text-white border-none",
+    success: "bg-success text-white border-none",
   };
-
-  const sizes = small ? "text-[13px] px-3.5 py-1.5 rounded-[10px]" : "text-[14px] px-5 py-2.5 rounded-[10px]";
 
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes} hover:opacity-80 active:opacity-90 ${className}`}
       {...props}
+      className={`
+        ${variants[variant]}
+        ${small ? "px-3.5 py-1.5 text-[13px]" : "px-5 py-2.5 text-[14px]"}
+        font-medium rounded-radius-btn cursor-pointer transition-opacity duration-150
+        hover:opacity-80 active:opacity-100 disabled:opacity-40 disabled:cursor-not-allowed
+        font-inherit
+        ${className}
+      `}
     >
       {children}
     </button>

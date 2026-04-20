@@ -20,9 +20,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            className={`w-full h-[42px] px-3.5 border rounded-lg text-[14px] font-inherit bg-background transition-all duration-150 outline-none
-              ${focused ? "border-accent ring-1 ring-accent/10" : "border-border-base"}
-              ${error ? "border-danger ring-1 ring-danger/10" : ""}
+            className={`w-full h-[42px] px-3.5 border rounded-radius-input text-[14px] font-inherit bg-background transition-all duration-150 outline-none
+              ${focused ? "border-accent" : "border-border-base"}
+              ${error ? "border-danger" : ""}
             `}
           />
         </div>

@@ -9,7 +9,7 @@ interface SectionTitleProps {
 export function SectionTitle({ children, action, className = "" }: SectionTitleProps) {
   return (
     <div className={`flex items-baseline justify-between mb-8 ${className}`}>
-      <h2 className="text-[24px] font-bold text-foreground tracking-tight m-0 font-tight">
+      <h2 className="text-[24px] font-semibold text-foreground tracking-[-0.02em] m-0 font-tight leading-tight">
         {children}
       </h2>
       {action && (

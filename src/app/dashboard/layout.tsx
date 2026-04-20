@@ -6,11 +6,10 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { label: "Overview", href: "/dashboard", icon: "📊" },
-  { label: "My Events", href: "/dashboard/events", icon: "📅" },
-  { label: "Registrations", href: "/dashboard/registrations", icon: "🎟️" },
-  { label: "Invitations", href: "/dashboard/invitations", icon: "💌" },
-  { label: "Account Settings", href: "/dashboard/settings", icon: "⚙️" },
+  { label: "My Events", href: "/dashboard" },
+  { label: "Pending Invitations", href: "/dashboard/invitations" },
+  { label: "My Reviews", href: "/dashboard/reviews" },
+  { label: "Settings", href: "/dashboard/settings" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,60 +17,64 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, logout } = useAuth();
 
   return (
-    <div className="flex min-h-[calc(100vh-60px)] bg-background">
-      {/* ── SIDEBAR ─────────────────────────────────────── */}
-      <aside className="w-[280px] border-r border-border-base bg-white hidden lg:flex flex-col">
-        <div className="p-8 grow">
-          <div className="space-y-1">
+    <div className="bg-background min-h-screen pt-[60px] font-sans">
+      <div className="max-w-[1040px] mx-auto px-8 py-12 grid grid-cols-[220px_1fr] gap-10 items-start">
+        
+        {/* ── SIDEBAR ─────────────────────────────────────── */}
+        <aside className="bg-white rounded-[12px] border border-border-base py-2 sticky top-[80px] transition-all">
+          <div className="px-5 pt-4 pb-3 text-[12px] font-semibold text-muted uppercase tracking-[0.07em]">
+            Dashboard
+          </div>
+          
+          <div className="space-y-0 text-foreground">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[14px] font-medium transition-colors ${
-                    isActive 
-                      ? "bg-accent/5 text-accent" 
-                      : "text-muted hover:bg-muted/5 hover:text-foreground"
-                  }`}
+                  className={`block px-5 py-2.5 text-[14px] transition-all border-l-[3px] 
+                    ${isActive 
+                      ? "bg-[#F3F1FF] text-foreground font-semibold border-accent" 
+                      : "text-muted font-normal border-transparent hover:text-foreground"
+                    }`}
                 >
-                  <span className="text-[18px]">{item.icon}</span>
                   {item.label}
                 </Link>
               );
             })}
           </div>
 
-          {user?.role === "ADMIN" && (
-            <div className="mt-10 pt-8 border-t border-border-base">
+          <div className="mt-2 pt-2 border-t border-border-base">
+            {user?.role === "ADMIN" && (
               <Link
                 href="/admin"
-                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[14px] font-bold text-danger hover:bg-danger/5 transition-colors"
+                className="block px-5 py-2.5 text-[14px] font-semibold text-danger hover:bg-danger/5"
               >
-                <span>🛡️</span>
-                Admin Panel
+                Shield Admin Hub
               </Link>
-            </div>
-          )}
-        </div>
+            )}
+            <button
+              onClick={() => logout()}
+              className="block w-full text-left px-5 py-2.5 text-[14px] text-muted hover:text-danger cursor-pointer"
+            >
+              Log out session
+            </button>
+            
+            <Link 
+              href="/" 
+              className="block px-5 py-2.5 text-[14px] text-muted border-t border-border-base mt-2 hover:text-foreground"
+            >
+              ← Back to site
+            </Link>
+          </div>
+        </aside>
 
-        <div className="p-8 border-t border-border-base">
-          <button
-            onClick={() => logout()}
-            className="flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-lg text-[14px] font-medium text-muted hover:bg-red-50 hover:text-danger transition-colors"
-          >
-            <span>🚪</span>
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      {/* ── MAIN CONTENT ─────────────────────────────────── */}
-      <main className="grow overflow-y-auto animate-fade-in p-10">
-        <div className="max-w-[1000px] mx-auto p-8 lg:p-12">
+        {/* ── MAIN CONTENT ─────────────────────────────────── */}
+        <main className="animate-fade-in min-w-0">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

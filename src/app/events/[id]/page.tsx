@@ -1,233 +1,192 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
-import { CategoryPill } from "@/components/ui/Pill";
-import { StarRating } from "@/components/ui/StarRating";
-import { SectionTitle } from "@/components/ui/SectionTitle";
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/Button";
+import { CategoryPill, StatusPill } from "@/components/ui/Pill";
 
-interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  userName: string;
-  createdAt: string;
-}
-
-interface EventDetail {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  venue: string;
-  feeCents: number;
-  visibility: "PUBLIC" | "PRIVATE";
-  ownerId: string;
-  participants: { userId: string }[];
-  reviews: Review[];
-}
-
-export default function EventDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function EventDetailsPage() {
+  const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-
-  const [event, setEvent] = useState<EventDetail | null>(null);
+  
+  const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"about" | "reviews">("about");
-  const [joining, setJoining] = useState(false);
+  const [tab, setTab] = useState<"details" | "reviews">("details");
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         const { data } = await api.get(`/events/${id}`);
         setEvent(data);
-      } catch (error) {
-        console.error("Failed to load event:", error);
+        if (user && data.ownerId === user.id) {
+          setIsOwner(true);
+        }
+      } catch (err) {
+        console.error("Failed to fetch event:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchEvent();
-  }, [id]);
+    if (id) fetchEvent();
+  }, [id, user]);
 
-  if (loading) {
-    return <div className="min-h-screen py-32 text-center text-muted animate-pulse">Loading event...</div>;
-  }
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted font-medium">Loading event details…</div>;
+  if (!event) return <div className="min-h-screen bg-background flex items-center justify-center text-muted font-medium font-sans px-8 text-center uppercase tracking-widest">Event not found</div>;
 
-  if (!event) {
-    return <div className="min-h-screen py-32 text-center text-muted">Event not found.</div>;
-  }
-
-  const isOwner = user?.id === event.ownerId;
-  const isJoined = event.participants.some((p) => p.userId === user?.id);
-  const isPaid = event.feeCents > 0;
-
-  const handleJoin = async () => {
-    if (!user) {
-      router.push("/login");
-      return;
+  const actionBtnLabel = () => {
+    const isPaid = event.feeCents > 0;
+    const isPublic = event.visibility === "public";
+    
+    if (isPublic) {
+      return isPaid ? `Pay & Join — ৳${(event.feeCents/100).toLocaleString()}` : "Join event";
     }
-
-    setJoining(true);
-    try {
-      const { data } = await api.post(`/events/${id}/join`);
-      
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      window.location.reload();
-    } catch (error: any) {
-      console.error("Failed to join event:", error);
-      alert(error.response?.data?.error?.message || "Something went wrong. Please try again.");
-    } finally {
-      setJoining(false);
-    }
+    return isPaid ? `Pay & Request — ৳${(event.feeCents/100).toLocaleString()}` : "Request to Join";
   };
 
-  const hasReviewed = event.reviews.some(r => r.userName === user?.name || r.id === user?.id);
-
   return (
-    <div className="bg-background min-h-screen">
-      {/* ── HEADER ────────────────────────────────────────── */}
-      <div className="bg-white border-b border-border-base relative">
-        <div className="max-w-[1000px] mx-auto px-8 py-16 flex flex-col md:flex-row gap-12 items-start">
-          <div className="aspect-video w-full md:w-[400px] rounded-2xl overflow-hidden bg-muted/5 border border-border-base shadow-sm">
-            <div className="w-full h-full flex items-center justify-center text-[11px] font-mono text-muted/30 uppercase tracking-widest text-center">
-              event cover image
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-6">
-            <CategoryPill type={event.visibility === "PUBLIC" ? "public" : "private"} feePercent={event.feeCents} />
-            <h1 className="text-[32px] font-bold text-foreground tracking-tight font-tight leading-[1.1]">
-              {event.title}
-            </h1>
-            
-            <div className="flex flex-col gap-2 text-[14px] text-muted font-medium">
-              <div className="flex items-center gap-2">
-                <span>📅</span>
-                {new Date(event.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-              </div>
-              <div className="flex items-center gap-2">
-                <span>📍</span>
-                {event.venue}
-              </div>
-            </div>
-
-            <div className="pt-4 flex gap-4">
-              {isOwner ? (
-                <>
-                  <Link href={`/dashboard/events/${id}/edit`}>
-                    <Button variant="secondary">Edit Event</Button>
-                  </Link>
-                  <Button variant="danger">Delete Event</Button>
-                </>
-              ) : isJoined ? (
-                <Button variant="secondary" disabled>✓ Already Joined</Button>
-              ) : (
-                <Button 
-                  variant="primary" 
-                  onClick={handleJoin} 
-                  disabled={joining}
-                >
-                  {joining ? "Joining..." : isPaid ? `Pay ৳${(event.feeCents / 100).toLocaleString()}` : "Join for Free"}
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+    <div className="bg-background min-h-screen pt-[60px] font-sans pb-20">
+      
+      {/* Cover Image */}
+      <div 
+        className="h-[320px] flex items-center justify-center text-[12px] font-mono text-white opacity-50 border-b border-border-base font-sans"
+        style={{ backgroundColor: event.coverImage || "#C7D4E8" }}
+      >
+        event cover image — 1200×320
       </div>
 
-      {/* ── CONTENT TABS ─────────────────────────────────── */}
-      <div className="max-w-[1000px] mx-auto px-8 py-12">
-        <div className="flex gap-10 border-b border-border-base mb-10">
-          {["about", "reviews"].map((t) => (
-            <button
-              key={t}
-              onClick={() => setActiveTab(t as any)}
-              className={`pb-4 text-[14px] font-bold uppercase tracking-wider border-b-2 transition-colors ${
-                activeTab === t ? "text-accent border-accent" : "text-muted border-transparent hover:text-foreground"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
+      <div className="max-w-[1200px] mx-auto px-8 py-10">
+        
+        {/* Back Link */}
+        <button 
+          onClick={() => router.push("/events")}
+          className="bg-none border-none text-muted text-[14px] cursor-pointer font-inherit mb-6 flex items-center gap-2 hover:text-foreground transition-colors"
+        >
+          ← Back to events
+        </button>
 
-        {activeTab === "about" ? (
-          <div className="prose prose-sm max-w-none text-muted leading-relaxed whitespace-pre-wrap text-[15px]">
-            {event.description}
-          </div>
-        ) : (
-          <div className="space-y-12">
-            {/* ── REVIEW FORM ────────────────────────────────── */}
-            {user && isJoined && !hasReviewed && (
-              <div className="bg-white border border-border-base rounded-2xl p-8 shadow-sm space-y-6">
-                <SectionTitle>Leave a Review</SectionTitle>
-                <form 
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const rating = parseInt(formData.get("rating") as string);
-                    const comment = formData.get("comment") as string;
-                    try {
-                      await api.post(`/events/${id}/reviews`, { rating, comment });
-                      window.location.reload();
-                    } catch (err) {
-                      console.error("Failed to post review:", err);
-                    }
-                  }}
-                  className="space-y-4"
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-12 items-start">
+          
+          {/* ── LEFT COLUMN ──────────────────────────────── */}
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 mb-4">
+              <CategoryPill type={event.visibility} feePercent={event.feeCents} />
+              {event.isFeatured && <StatusPill status="featured" />}
+            </div>
+            
+            <h1 className="text-[36px] font-bold text-foreground tracking-[-0.03em] font-tight mb-4 leading-tight">
+              {event.title}
+            </h1>
+
+            <div className="flex flex-wrap gap-x-8 gap-y-4 mb-8">
+              {[
+                { icon: "📅", text: `${new Date(event.date).toLocaleDateString()} · ${event.time || "TBA"}` },
+                { icon: "📍", text: event.venue },
+                { icon: "👤", text: `Organized by ${event.owner?.name || "Organizer"}` },
+                { icon: "👥", text: `${event._count?.participants || 0} participants` },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-[14px] text-muted">
+                  <span>{item.icon}</span>
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-border-base mb-8">
+              {["details", "reviews"].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t as any)}
+                  className={`px-5 py-2.5 text-[14px] font-medium transition-colors border-b-2 -mb-px capitalize
+                    ${tab === t ? "text-accent border-accent" : "text-muted border-transparent hover:text-foreground"}`}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-[14px] font-bold text-foreground">Rating:</span>
-                    <input type="hidden" name="rating" id="review-rating" defaultValue="5" />
-                    <StarRating 
-                      size={24} 
-                      onChange={(v) => {
-                        const el = document.getElementById("review-rating") as HTMLInputElement;
-                        if (el) el.value = v.toString();
-                      }}
-                    />
-                  </div>
-                  <textarea
-                    name="comment"
-                    placeholder="What did you think of the event?"
-                    required
-                    className="w-full p-4 border border-border-base rounded-xl text-[14px] outline-none focus:border-accent min-h-[100px]"
-                  />
-                  <Button type="submit" variant="primary">Submit Review</Button>
-                </form>
+                  {t} {t === "reviews" ? `(${event._count?.reviews || 0})` : ""}
+                </button>
+              ))}
+            </div>
+
+            {tab === "details" && (
+              <div className="text-[15px] text-foreground leading-[1.8] max-w-[600px] space-y-5 animate-fade-in">
+                <p>{event.description}</p>
+                <p>
+                  This event is open to professionals at all levels. Whether you're pre-launch or post-Series A, 
+                  the Planora platform provides the best space to grow your network and get honest feedback 
+                  from peers who understand the local landscape.
+                </p>
+                <p>
+                  Doors open 30 minutes before the start time. Light refreshments will be available throughout the session.
+                </p>
               </div>
             )}
 
-            <div className="space-y-8">
-              {event.reviews.length === 0 ? (
-                <div className="py-20 text-center text-muted italic text-[14px]">No reviews yet.</div>
-              ) : (
-                event.reviews.map((rev) => (
-                  <div key={rev.id} className="border-b border-border-base pb-8 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <div className="font-bold text-foreground text-[14px]">{rev.userName}</div>
-                      <StarRating value={rev.rating} readOnly />
-                    </div>
-                    <p className="text-[14px] text-muted leading-relaxed italic">"{rev.comment}"</p>
-                    <div className="text-[11px] text-muted/60 uppercase font-bold tracking-widest">
-                      {new Date(rev.createdAt).toLocaleDateString()}
+            {tab === "reviews" && (
+              <div className="animate-fade-in space-y-8">
+                <div className="p-5 bg-white border border-border-base rounded-[12px] flex items-center gap-6">
+                  <div className="text-[40px] font-bold text-foreground tabular-nums leading-none">
+                    {event._count?.reviews > 0 ? (event.avgRating || 0).toFixed(1) : "—"}
+                  </div>
+                  <div>
+                    <div className="flex gap-0.5 text-[#F59E0B] text-[20px]">★★★★★</div>
+                    <div className="text-[13px] text-muted mt-1">
+                      Based on {event._count?.reviews || 0} reviews
                     </div>
                   </div>
-                ))
+                </div>
+                
+                <div className="py-12 text-center text-muted text-[14px] border-t border-border-base">
+                  No detailed reviews yet for this event.
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── RIGHT COLUMN (sticky panel) ──────────────── */}
+          <div className="sticky top-[80px]">
+            <div className="bg-white rounded-[12px] border border-border-base p-6 mb-4 shadow-sm">
+              <div className="text-[28px] font-bold text-foreground tabular-nums mb-1">
+                {event.feeCents === 0 ? "Free" : `৳${(event.feeCents/100).toLocaleString()}`}
+              </div>
+              <div className="text-[13px] text-muted mb-6">
+                {event._count?.participants || 0} registered · {isOwner ? "You own this event" : "Public"}
+              </div>
+              
+              <Button variant="primary" className="w-full h-[46px] text-[15px] font-bold">
+                {actionBtnLabel()}
+              </Button>
+            </div>
+
+            {/* Owner controls */}
+            <div className="bg-white rounded-[12px] border border-border-base p-6 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-[13px] font-bold text-foreground">Controls</div>
+                {isOwner && <span className="bg-success/10 text-success text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Owner Profile</span>}
+              </div>
+              {isOwner ? (
+                <div className="flex flex-col gap-2.5">
+                  <Button variant="secondary" small className="w-full">Edit event details</Button>
+                  <Button 
+                    variant="secondary" 
+                    small 
+                    className="w-full"
+                    onClick={() => router.push(`/dashboard/events/${event.id}`)}
+                  >
+                    Manage participants
+                  </Button>
+                  <Button variant="danger" small className="w-full">Delete event permanent</Button>
+                </div>
+              ) : (
+                <div className="text-[13px] text-muted leading-relaxed">
+                  Management controls are only visible to the event host. Log in as the organizer to moderate participants.
+                </div>
               )}
             </div>
           </div>
-        )}
+
+        </div>
       </div>
     </div>
   );
