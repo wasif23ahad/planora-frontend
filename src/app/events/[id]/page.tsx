@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill } from "@/components/ui/Pill";
 import { StarRating } from "@/components/ui/StarRating";
+import { SectionTitle } from "@/components/ui/SectionTitle";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
@@ -75,13 +77,11 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
     try {
       const { data } = await api.post(`/events/${id}/join`);
       
-      // If it's a paid event, backend returns { url: "stripe_url_here" }
       if (data.url) {
         window.location.href = data.url;
         return;
       }
 
-      // If it's a free event, backend returns the registration info
       window.location.reload();
     } catch (error: any) {
       console.error("Failed to join event:", error);
@@ -91,12 +91,14 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const hasReviewed = event.reviews.some(r => r.userName === user?.name || r.id === user?.id);
+
   return (
     <div className="bg-background min-h-screen">
       {/* ── HEADER ────────────────────────────────────────── */}
       <div className="bg-white border-b border-border-base relative">
         <div className="max-w-[1000px] mx-auto px-8 py-16 flex flex-col md:flex-row gap-12 items-start">
-          <div className="aspect-[16/9] w-full md:w-[400px] rounded-2xl overflow-hidden bg-muted/5 border border-border-base shadow-sm">
+          <div className="aspect-video w-full md:w-[400px] rounded-2xl overflow-hidden bg-muted/5 border border-border-base shadow-sm">
             <div className="w-full h-full flex items-center justify-center text-[11px] font-mono text-muted/30 uppercase tracking-widest text-center">
               event cover image
             </div>
@@ -164,35 +166,69 @@ export default function EventDetailsPage({ params }: { params: Promise<{ id: str
             {event.description}
           </div>
         ) : (
-          <div className="space-y-8">
-            {event.reviews.length === 0 ? (
-              <div className="py-20 text-center text-muted italic text-[14px]">No reviews yet.</div>
-            ) : (
-              event.reviews.map((rev) => (
-                <div key={rev.id} className="border-b border-border-base pb-8 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <div className="font-bold text-foreground text-[14px]">{rev.userName}</div>
-                    <StarRating value={rev.rating} readOnly />
+          <div className="space-y-12">
+            {/* ── REVIEW FORM ────────────────────────────────── */}
+            {user && isJoined && !hasReviewed && (
+              <div className="bg-white border border-border-base rounded-2xl p-8 shadow-sm space-y-6">
+                <SectionTitle>Leave a Review</SectionTitle>
+                <form 
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const rating = parseInt(formData.get("rating") as string);
+                    const comment = formData.get("comment") as string;
+                    try {
+                      await api.post(`/events/${id}/reviews`, { rating, comment });
+                      window.location.reload();
+                    } catch (err) {
+                      console.error("Failed to post review:", err);
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-[14px] font-bold text-foreground">Rating:</span>
+                    <input type="hidden" name="rating" id="review-rating" defaultValue="5" />
+                    <StarRating 
+                      size={24} 
+                      onChange={(v) => {
+                        const el = document.getElementById("review-rating") as HTMLInputElement;
+                        if (el) el.value = v.toString();
+                      }}
+                    />
                   </div>
-                  <p className="text-[14px] text-muted leading-relaxed italic">"{rev.comment}"</p>
-                  <div className="text-[11px] text-muted/60 uppercase font-bold tracking-widest">
-                    {new Date(rev.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-              ))
+                  <textarea
+                    name="comment"
+                    placeholder="What did you think of the event?"
+                    required
+                    className="w-full p-4 border border-border-base rounded-xl text-[14px] outline-none focus:border-accent min-h-[100px]"
+                  />
+                  <Button type="submit" variant="primary">Submit Review</Button>
+                </form>
+              </div>
             )}
+
+            <div className="space-y-8">
+              {event.reviews.length === 0 ? (
+                <div className="py-20 text-center text-muted italic text-[14px]">No reviews yet.</div>
+              ) : (
+                event.reviews.map((rev) => (
+                  <div key={rev.id} className="border-b border-border-base pb-8 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="font-bold text-foreground text-[14px]">{rev.userName}</div>
+                      <StarRating value={rev.rating} readOnly />
+                    </div>
+                    <p className="text-[14px] text-muted leading-relaxed italic">"{rev.comment}"</p>
+                    <div className="text-[11px] text-muted/60 uppercase font-bold tracking-widest">
+                      {new Date(rev.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-// Helper to keep Link working inside the component template
-function Link({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <a href={href} onClick={(e) => { e.preventDefault(); window.location.href = href; }}>
-      {children}
-    </a>
   );
 }
