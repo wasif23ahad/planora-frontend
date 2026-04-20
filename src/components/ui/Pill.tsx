@@ -7,7 +7,7 @@ interface CategoryPillProps {
   feePercent: number; // Changed to match domain logic if needed, or fee in sub-units
 }
 
-export function CategoryPill({ type, feePercent }: { type: string, fee: number }) {
+export function CategoryPill({ type, feePercent }: CategoryPillProps) {
   const isFree = feePercent === 0;
   
   const map = {
