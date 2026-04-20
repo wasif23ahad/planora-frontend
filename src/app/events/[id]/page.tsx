@@ -73,7 +73,7 @@ export default function EventDetailsPage() {
           {/* ── LEFT COLUMN ──────────────────────────────── */}
           <div className="min-w-0">
             <div className="flex items-center gap-3 mb-4">
-              <CategoryPill type={event.visibility} feePercent={event.feeCents} />
+              <CategoryPill type={event.visibility} feeCents={event.feeCents} />
               {event.isFeatured && <StatusPill status="featured" />}
             </div>
             

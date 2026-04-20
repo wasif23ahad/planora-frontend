@@ -2,15 +2,15 @@ import React from "react";
 
 interface CategoryPillProps {
   type: string;
-  feePercent: number; // fee in cents
+  feeCents: number;
 }
 
 interface StatusPillProps {
   status: string;
 }
 
-export const CategoryPill = ({ type, feePercent }: CategoryPillProps) => {
-  const isPaid = feePercent > 0;
+export const CategoryPill = ({ type, feeCents }: CategoryPillProps) => {
+  const isPaid = feeCents > 0;
   const key = `${type.toLowerCase()}-${isPaid ? "paid" : "free"}`;
   
   const map: Record<string, { bg: string, fg: string, label: string }> = {

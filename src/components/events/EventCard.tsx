@@ -51,7 +51,7 @@ export function EventCard({ event }: EventCardProps) {
         </div>
 
         <div className="flex items-center justify-between">
-          <CategoryPill type={event.visibility} feePercent={event.feeCents} />
+          <CategoryPill type={event.visibility} feeCents={event.feeCents} />
           
           <span className="text-[13px] font-semibold text-foreground tabular-nums">
             {event.feeCents === 0 ? (

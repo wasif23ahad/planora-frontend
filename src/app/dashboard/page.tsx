@@ -25,21 +25,16 @@ export default function DashboardOverviewPage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [owned, participating] = await Promise.all([
-          api.get("/events/owned"),
-          api.get("/events/participating"),
-        ]);
-        
-        const totalRev = owned.data.reduce((acc: number, ev: any) => acc + (ev.feeCents * (ev._count?.participants || 0)), 0);
+        const { data: owned } = await api.get("/events/me");
 
         setData({
           stats: {
-            totalEvents: owned.data.length,
-            totalRevenue: totalRev,
-            totalParticipations: participating.data.length,
+            totalEvents: owned.length,
+            totalRevenue: 0,
+            totalParticipations: 0,
           },
-          ownedEvents: owned.data,
-          participatingEvents: participating.data,
+          ownedEvents: owned,
+          participatingEvents: [],
         });
       } catch (error) {
         console.error("Dashboard load failed:", error);

@@ -21,8 +21,8 @@ export default function EventsListingPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const { data } = await api.get("/events");
-        setEvents(data);
+        const { data } = await api.get("/events?limit=50");
+        setEvents(data.items ?? data);
       } catch (error) {
         console.error("Failed to fetch events:", error);
       } finally {

@@ -63,7 +63,7 @@ export default function EventModerationPage() {
                   <div className="text-[11px] text-muted">{e.owner.email}</div>
                 </td>
                 <td className="px-6 py-4">
-                  <CategoryPill type={e.visibility === "PUBLIC" ? "public" : "private"} feePercent={e.feeCents} />
+                  <CategoryPill type={e.visibility === "PUBLIC" ? "public" : "private"} feeCents={e.feeCents} />
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">

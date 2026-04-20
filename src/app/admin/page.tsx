@@ -114,7 +114,7 @@ export default function AdminHubPage() {
                           {ev.reported && <div className="text-[10px] text-danger font-bold uppercase mt-1">⚑ Reported</div>}
                         </td>
                         <td className="px-4 py-4 text-muted">{ev.owner?.name || "Member"}</td>
-                        <td className="px-4 py-4"><CategoryPill type={ev.visibility} feePercent={ev.feeCents} /></td>
+                        <td className="px-4 py-4"><CategoryPill type={ev.visibility} feeCents={ev.feeCents} /></td>
                         <td className="px-4 py-4"><StatusPill status={ev.status} /></td>
                         <td className="px-4 py-4 text-muted tabular-nums">{ev.participantsCount || 0}</td>
                         <td className="px-4 py-4">
