@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
-  { label: "Home", href: "/" },
   { label: "Events", href: "/events" },
+  { label: "About", href: "/about" },
 ];
 
 export function Navbar() {
@@ -29,65 +29,75 @@ export function Navbar() {
 
   return (
     <nav 
-      className={`fixed top-0 left-0 right-0 h-[60px] flex items-center z-[100] transition-all bg-background
-        ${scrolled ? "border-b border-border-base" : "border-b border-transparent"}`}
+      className={`fixed top-0 left-0 right-0 z-[50] flex items-center justify-between w-full px-8 py-4 
+        bg-[#FAFAF7] dark:bg-stone-900 
+        ${scrolled ? "border-b border-stone-200 dark:border-stone-800" : "border-b border-transparent"}
+        transition-all duration-200`}
     >
-      <div className="max-w-[1200px] w-full mx-auto px-8 flex items-center justify-between">
-        
-        {/* Logo */}
-        <Link href="/" className="text-[20px] font-bold tracking-[-0.03em] text-foreground font-tight hover:opacity-80 transition-opacity">
-          Planora
-        </Link>
+      {/* Logo */}
+      <Link href="/" className="text-2xl font-semibold tracking-tighter text-stone-900 dark:text-stone-50 font-[Inter_Tight] hover:opacity-80 transition-opacity">
+        Planora
+      </Link>
 
-        {/* Links */}
-        <div className="hidden md:flex gap-8 items-center h-full">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-[14px] font-medium transition-colors h-[60px] flex items-center border-b-2 
-                  ${isActive 
-                    ? "text-accent border-accent" 
-                    : "text-muted border-transparent hover:text-foreground"}`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-          {user && (
+      {/* Navigation Links - Hidden on mobile */}
+      <div className="hidden md:flex gap-8">
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm 
+                ${isActive 
+                  ? "text-stone-900 dark:text-stone-50 border-b-2 border-primary pb-1" 
+                  : "text-[#5B5B58] dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"}`}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Actions */}
+      <div className="hidden md:flex gap-4 items-center">
+        {user ? (
+          <>
             <Link 
               href="/dashboard" 
-              className={`text-[14px] font-medium transition-colors h-[60px] flex items-center border-b-2
+              className={`font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm 
                 ${pathname.startsWith("/dashboard") 
-                  ? "text-accent border-accent" 
-                  : "text-muted border-transparent hover:text-foreground"}`}
+                  ? "text-stone-900 dark:text-stone-50 border-b-2 border-primary pb-1" 
+                  : "text-[#5B5B58] dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"}`}
             >
               Dashboard
             </Link>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2.5">
-          {user ? (
-            <div className="flex items-center gap-4">
+            
+            <div className="flex items-center gap-3">
               <span className="text-[13px] font-bold text-muted hidden sm:inline tabular-nums">
                 {user.name.split(" ")[0]}
               </span>
-              <div className="w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-[12px]">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[12px]">
                 {user.name[0]}
               </div>
             </div>
-          ) : (
-            <>
-              <Link href="/login"><Button variant="secondary" small>Log in</Button></Link>
-              <Link href="/register"><Button variant="primary" small>Sign up</Button></Link>
-            </>
-          )}
-        </div>
-
+          </>
+        ) : (
+          <>
+            <Link 
+              href="/login" 
+              className="font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm text-[#5B5B58] dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"
+            >
+              Log In
+            </Link>
+            
+            <Link 
+              href="/register"
+              className="bg-gradient-primary text-on-primary px-4 py-2 rounded-lg font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm hover:opacity-80 transition-opacity active:scale-[0.99] duration-150"
+            >
+              Sign Up
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );

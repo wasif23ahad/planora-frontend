@@ -1,31 +1,21 @@
 export function Footer() {
   return (
-    <footer className="border-t border-border-base bg-white font-sans mt-auto">
-      <div className="max-w-[1200px] mx-auto px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 items-start">
-        <div>
-          <div className="text-[18px] font-bold tracking-[-0.03em] text-foreground mb-2">Planora</div>
-          <div className="text-[13px] text-muted leading-[1.7]">Create, discover, and join events.</div>
+    <footer className="bg-[#EEEEEB] dark:bg-stone-950 w-full mt-20 tonal background shift to surface_container grid grid-cols-1 md:grid-cols-3 gap-12 px-8 py-16 max-w-[1440px] mx-auto">
+      <div>
+        <div className="text-lg font-semibold tracking-tighter text-stone-900 dark:text-stone-50 mb-4 font-[Inter_Tight]">
+          Planora
         </div>
-        {[
-          { h: "About", l: ["Our story", "How it works", "Blog"] },
-          { h: "Contact", l: ["Support", "Partnerships", "Press"] },
-          { h: "Legal", l: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
-        ].map(col => (
-          <div key={col.h}>
-            <div className="text-[12px] font-semibold text-muted uppercase tracking-[0.07em] mb-3.5">{col.h}</div>
-            {col.l.map(l => (
-              <div
-                key={l}
-                className="text-[14px] text-muted mb-2 cursor-pointer hover:text-foreground transition-colors"
-              >
-                {l}
-              </div>
-            ))}
-          </div>
-        ))}
+        <p className="text-[#5B5B58] dark:text-stone-400">
+          © 2024 Planora. All rights reserved.
+        </p>
       </div>
-      <div className="border-t border-border-base max-w-[1200px] mx-auto px-8 py-4 text-[12px] text-muted">
-        © 2026 Planora. All rights reserved.
+      <div className="flex flex-col gap-3">
+        <a className="text-[#5B5B58] dark:text-stone-400 hover:underline decoration-[#3B2BFF] underline-offset-4" href="#">About</a>
+        <a className="text-[#5B5B58] dark:text-stone-400 hover:underline decoration-[#3B2BFF] underline-offset-4" href="#">Contact</a>
+        <a className="text-[#5B5B58] dark:text-stone-400 hover:underline decoration-[#3B2BFF] underline-offset-4" href="#">Legal</a>
+      </div>
+      <div>
+        <a className="text-[#3B2BFF] hover:underline decoration-[#3B2BFF] underline-offset-4 font-medium" href="#">Subscribe to updates</a>
       </div>
     </footer>
   );
