@@ -39,12 +39,30 @@ export default function EventDetailsPage() {
 
   const actionBtnLabel = () => {
     const isPaid = event.feeCents > 0;
-    const isPublic = event.visibility === "public";
-    
-    if (isPublic) {
-      return isPaid ? `Pay & Join — ৳${(event.feeCents/100).toLocaleString()}` : "Join event";
+    const isPublic = event.visibility === "PUBLIC";
+    if (isPublic) return isPaid ? `Pay & Join — ৳${(event.feeCents / 100).toLocaleString()}` : "Join event";
+    return isPaid ? `Pay & Request — ৳${(event.feeCents / 100).toLocaleString()}` : "Request to Join";
+  };
+
+  const handleAction = async () => {
+    if (!user) { window.location.href = "/login"; return; }
+    const isPaid = event.feeCents > 0;
+    if (isPaid) {
+      try {
+        const { data } = await api.post("/payments/checkout", { eventId: event.id });
+        window.location.href = data.url;
+      } catch (err: any) {
+        alert(err.response?.data?.error?.message || "Payment failed");
+      }
+    } else {
+      try {
+        await api.post(`/events/${event.id}/join`);
+        alert("Successfully joined!");
+        window.location.reload();
+      } catch (err: any) {
+        alert(err.response?.data?.error?.message || "Could not join event");
+      }
     }
-    return isPaid ? `Pay & Request — ৳${(event.feeCents/100).toLocaleString()}` : "Request to Join";
   };
 
   return (
@@ -154,7 +172,7 @@ export default function EventDetailsPage() {
                 {event._count?.participants || 0} registered · {isOwner ? "You own this event" : "Public"}
               </div>
               
-              <Button variant="primary" className="w-full h-[46px] text-[15px] font-bold">
+              <Button variant="primary" className="w-full h-[46px] text-[15px] font-bold" onClick={handleAction}>
                 {actionBtnLabel()}
               </Button>
             </div>

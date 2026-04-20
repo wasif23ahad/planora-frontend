@@ -14,7 +14,7 @@ export default function InvitationsPage() {
   useEffect(() => {
     const fetchInvitations = async () => {
       try {
-        const { data } = await api.get("/invitations");
+        const { data } = await api.get("/invitations/me");
         setInvitations(data);
       } catch (error) {
         console.error("Failed to load invitations:", error);
