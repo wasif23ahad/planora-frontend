@@ -28,7 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${interTight.variable} font-sans bg-background text-foreground flex flex-col min-h-screen`}>
+      <head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+      </head>
+      <body className={`${inter.variable} ${interTight.variable} font-body bg-surface text-on-surface antialiased flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary`}>
         <AuthProvider>
           <Navbar />
           <main className="grow animate-fade-in">

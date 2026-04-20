@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 const sidebarItems = [
   { key: "events", label: "All Events", href: "/admin/events" },
   { key: "users",  label: "All Users",  href: "/admin/users" },
+  { key: "messages", label: "Messages",  href: "/admin/messages" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

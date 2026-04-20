@@ -21,67 +21,84 @@ export default function InvitationsPage() {
         const { data } = await api.post("/payments/checkout", { eventId });
         window.location.href = data.url;
       } catch (err: any) {
-        alert(err.response?.data?.error?.message || "Payment failed");
+        alert(err.response?.data?.message || "Payment service unavailable");
       }
     } else {
       try {
-        await api.post(`/invitations/${id}/accept`);
+        await api.patch(`/invitations/${id}`, { status: "ACCEPTED" });
         setInvitations(prev => prev.filter(inv => inv.id !== id));
       } catch (err: any) {
-        alert(err.response?.data?.error?.message || "Failed to accept");
+        alert(err.response?.data?.message || "Failed to accept invitation");
       }
     }
   };
 
   const handleDecline = async (id: string) => {
     try {
-      await api.post(`/invitations/${id}/decline`);
+      await api.patch(`/invitations/${id}`, { status: "DECLINED" });
       setInvitations(prev => prev.filter(inv => inv.id !== id));
     } catch (err: any) {
-      alert(err.response?.data?.error?.message || "Failed to decline");
+      alert(err.response?.data?.message || "Failed to decline invitation");
     }
   };
 
-  if (loading) return <div className="py-12 text-[14px] text-muted">Loading…</div>;
+  if (loading) return <div className="py-24 text-center text-secondary animate-pulse font-headline">Loading invitations...</div>;
 
   return (
-    <div>
-      <h1 className="text-[28px] font-bold text-foreground tracking-[-0.02em] mb-8">Pending Invitations</h1>
+    <div className="space-y-10">
+      <header>
+        <h1 className="font-headline text-4xl font-semibold tracking-[-0.03em] text-on-surface">Invitations</h1>
+        <p className="text-secondary mt-1">Exclusive access requests and community invites.</p>
+      </header>
 
       {invitations.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border-base rounded-[12px] text-muted text-[14px]">
-          No pending invitations.
+        <div className="flex flex-col items-center justify-center py-32 text-center space-y-4 bg-surface-container-low/20 rounded-2xl border border-dashed border-outline-variant/30">
+          <span className="material-symbols-outlined text-[64px] text-secondary/20">mail_outline</span>
+          <p className="text-sm font-medium text-secondary">No pending invitations at the moment.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          {invitations.map(inv => (
-            <div
-              key={inv.id}
-              className="bg-white rounded-[12px] border border-border-base px-6 py-5 flex justify-between items-center"
-            >
-              <div>
-                <div className="text-[15px] font-semibold text-foreground mb-1">{inv.event?.title}</div>
-                <div className="text-[13px] text-muted">
-                  {inv.inviter?.name} · {inv.event?.date ? new Date(inv.event.date).toLocaleDateString() : ""}
-                  {inv.event?.feeCents > 0 && (
-                    <span className="ml-2 text-foreground font-medium">৳{(inv.event.feeCents / 100).toLocaleString()}</span>
-                  )}
+        <div className="grid grid-cols-1 gap-4">
+          {invitations.map(inv => {
+            const isPaid = inv.event?.fee > 0;
+            return (
+              <div
+                key={inv.id}
+                className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 ambient-shadow"
+              >
+                <div className="space-y-1">
+                  <h3 className="font-headline font-bold text-on-surface text-lg leading-tight">
+                     {inv.event?.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-secondary text-xs font-medium">
+                    <span className="material-symbols-outlined text-[16px]">person</span>
+                    <span>Invite from {inv.inviter?.name}</span>
+                    <span className="opacity-30">·</span>
+                    <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                    <span>{inv.event?.date ? new Date(inv.event.date).toLocaleDateString() : "TBA"}</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 w-full sm:w-auto">
+                    <Button 
+                      variant={isPaid ? "primary" : "secondary"}
+                      size="sm" 
+                      onClick={() => handleAccept(inv.id, isPaid, inv.event?.id)}
+                      className="flex-1 sm:flex-none"
+                    >
+                      {isPaid ? `Pay & Accept (৳${inv.event.fee.toLocaleString()})` : "Accept"}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDecline(inv.id)}
+                      className="border border-outline-variant/20"
+                    >
+                      Decline
+                    </Button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                {inv.event?.feeCents > 0 ? (
-                  <Button variant="primary" small onClick={() => handleAccept(inv.id, true, inv.event.id)}>
-                    Pay & Accept — ৳{(inv.event.feeCents / 100).toLocaleString()}
-                  </Button>
-                ) : (
-                  <Button variant="primary" small onClick={() => handleAccept(inv.id, false, inv.event?.id)}>
-                    Accept
-                  </Button>
-                )}
-                <Button variant="secondary" small onClick={() => handleDecline(inv.id)}>Decline</Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

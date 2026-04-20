@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/Button";
 
 const navLinks = [
   { label: "Events", href: "/events" },
@@ -20,84 +20,90 @@ export function Navbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 0);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isAuthPage = ["/login", "/register"].includes(pathname);
+  const isAuthPage = ["/login", "/signup", "/register"].includes(pathname);
   if (isAuthPage) return null;
 
   return (
     <nav 
-      className={`fixed top-0 left-0 right-0 z-[50] flex items-center justify-between w-full px-8 py-4 
-        bg-[#FAFAF7] dark:bg-stone-900 
-        ${scrolled ? "border-b border-stone-200 dark:border-stone-800" : "border-b border-transparent"}
-        transition-all duration-200`}
+      className={`sticky top-0 z-50 bg-[#FAFAF7] dark:bg-stone-900 w-full transition-all duration-200 border-b
+        ${scrolled ? "border-stone-200 dark:border-stone-800 shadow-sm" : "border-transparent"}`}
     >
-      {/* Logo */}
-      <Link href="/" className="text-2xl font-semibold tracking-tighter text-stone-900 dark:text-stone-50 font-[Inter_Tight] hover:opacity-80 transition-opacity">
-        Planora
-      </Link>
+      <div className="max-w-[1440px] mx-auto px-8 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-12">
+          {/* Logo */}
+          <Link href="/" className="text-2xl font-semibold tracking-tighter text-stone-900 dark:text-stone-50 font-headline hover:opacity-80 transition-opacity">
+            Planora
+          </Link>
 
-      {/* Navigation Links - Hidden on mobile */}
-      <div className="hidden md:flex gap-8">
-        {navLinks.map((link) => {
-          const isActive = pathname === link.href;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm 
-                ${isActive 
-                  ? "text-stone-900 dark:text-stone-50 border-b-2 border-primary pb-1" 
-                  : "text-[#5B5B58] dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"}`}
-            >
-              {link.label}
-            </Link>
-          );
-        })}
-      </div>
+          {/* Navigation Links */}
+          <nav className="hidden md:flex gap-8 items-center">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150
+                    ${isActive 
+                      ? "text-primary border-b-2 border-primary pb-1" 
+                      : "text-secondary dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80"}`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-      {/* Actions */}
-      <div className="hidden md:flex gap-4 items-center">
-        {user ? (
-          <>
-            <Link 
-              href="/dashboard" 
-              className={`font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm 
-                ${pathname.startsWith("/dashboard") 
-                  ? "text-stone-900 dark:text-stone-50 border-b-2 border-primary pb-1" 
-                  : "text-[#5B5B58] dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"}`}
-            >
-              Dashboard
-            </Link>
-            
-            <div className="flex items-center gap-3">
-              <span className="text-[13px] font-bold text-muted hidden sm:inline tabular-nums">
-                {user.name.split(" ")[0]}
-              </span>
-              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[12px]">
-                {user.name[0]}
+        {/* Actions Area */}
+        <div className="flex items-center gap-6">
+          {user ? (
+            <div className="flex items-center gap-6">
+              <Link 
+                href="/dashboard" 
+                className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150 hidden sm:block
+                  ${pathname.startsWith("/dashboard") 
+                    ? "text-primary border-b-2 border-primary pb-1" 
+                    : "text-secondary dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80"}`}
+              >
+                Dashboard
+              </Link>
+              
+              <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/20">
+                <div className="hidden sm:flex flex-col items-end">
+                   <span className="text-[12px] font-bold text-stone-900 dark:text-stone-50 leading-tight">
+                     {user.name}
+                   </span>
+                   <span className="text-[10px] text-secondary dark:text-stone-400 font-medium tracking-wide uppercase">
+                     {user.role}
+                   </span>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-[13px] shadow-sm">
+                  {user.name[0]}
+                </div>
               </div>
             </div>
-          </>
-        ) : (
-          <>
-            <Link 
-              href="/login" 
-              className="font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm text-[#5B5B58] dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"
-            >
-              Log In
-            </Link>
-            
-            <Link 
-              href="/register"
-              className="bg-gradient-primary text-on-primary px-4 py-2 rounded-lg font-[Inter_Tight] font-semibold tracking-tighter uppercase text-sm hover:opacity-80 transition-opacity active:scale-[0.99] duration-150"
-            >
-              Sign Up
-            </Link>
-          </>
-        )}
+          ) : (
+            <div className="flex items-center gap-6">
+              <Link 
+                href="/login" 
+                className="font-headline font-semibold tracking-tighter uppercase text-sm text-secondary dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"
+              >
+                Log In
+              </Link>
+              
+              <Link href="/register">
+                <Button size="sm" className="bg-gradient-primary">
+                  Sign Up
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

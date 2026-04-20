@@ -7,17 +7,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { SectionTitle } from "@/components/ui/SectionTitle";
 import api from "@/lib/api";
 
 const eventSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().min(10, "Please provide a more detailed description"),
-  date: z.string(), // We will handle future verification manually for edits to avoid blocking past events
+  title: z.string().min(3, "Title must be at least 3 characters").max(120),
+  description: z.string().min(10, "Please provide a more detailed description").max(5000),
+  date: z.string(), // Allowing historic dates for edits if already set, but logic keeps them as strings
   venue: z.string().min(2, "Venue is required"),
-  category: z.string().min(1, "Please select a category"),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
-  feeCents: z.number().min(0, "Fee cannot be negative"),
+  category: z.string().min(1, "Please select a category"),
+  fee: z.number().min(0, "Fee cannot be negative"), // BDT
 });
 
 type EventForm = z.infer<typeof eventSchema>;
@@ -29,13 +28,9 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const [fetchLoading, setFetchLoading] = useState(true);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<EventForm>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
   });
 
@@ -46,17 +41,20 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         setValue("title", data.title);
         setValue("description", data.description);
         setValue("venue", data.venue);
-        setValue("category", data.category);
         setValue("visibility", data.visibility);
-        setValue("feeCents", data.feeCents);
+        setValue("category", data.category);
+        setValue("fee", (data.feeCents || 0) / 100); // Convert Cents to BDT for UI
         
-        // Format date for datetime-local input (YYYY-MM-DDThh:mm)
-        const dateStr = new Date(data.date).toISOString().slice(0, 16);
-        setValue("date", dateStr);
+        // Format date for datetime-local (YYYY-MM-DDThh:mm)
+        if (data.date) {
+            const dateStr = new Date(data.date).toISOString().slice(0, 16);
+            setValue("date", dateStr);
+        }
         
         if (data.coverImage) setPreview(data.coverImage);
-      } catch (error) {
-        console.error("Failed to load event for editing:", error);
+      } catch (err: any) {
+        console.error("Failed to load event:", err);
+        setError("Could not retrieve event data.");
       } finally {
         setFetchLoading(false);
       }
@@ -76,110 +74,165 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
 
   const onSubmit = async (data: EventForm) => {
     setLoading(true);
+    setError(null);
     try {
       const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => formData.append(key, value.toString()));
-      if (image) formData.append("coverImage", image);
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("date", data.date);
+      formData.append("venue", data.venue);
+      formData.append("visibility", data.visibility);
+      formData.append("category", data.category);
+      formData.append("feeCents", Math.round(data.fee * 100).toString());
+
+      if (image) {
+        formData.append("coverImage", image);
+      }
 
       await api.patch(`/events/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" }
       });
 
       router.push("/dashboard");
-    } catch (error: any) {
-      console.error("Failed to update event:", error);
-      alert(error.response?.data?.message || "Failed to update event. Check your inputs.");
+    } catch (err: any) {
+      setError(err.response?.data?.error?.message || "Failed to update event.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetchLoading) return <div className="py-24 text-center text-muted animate-pulse">Loading event data...</div>;
+  if (fetchLoading) return (
+    <div className="py-24 text-center text-secondary animate-pulse font-headline">
+      Sourcing event meta-data...
+    </div>
+  );
 
   return (
-    <div className="max-w-[800px] mx-auto">
-      <SectionTitle>Edit Event</SectionTitle>
+    <div className="space-y-12 max-w-4xl">
+      <header className="space-y-4">
+        <nav className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-[0.2em] leading-none">
+           <button onClick={() => router.back()} className="hover:text-primary transition-colors">Dashboard</button>
+           <span className="material-symbols-outlined text-[14px] opacity-30">chevron_right</span>
+           <span className="text-on-surface">Edit Event</span>
+        </nav>
+        <h1 className="font-headline text-4xl font-semibold tracking-[-0.04em] text-on-surface">Refine the experience</h1>
+        <p className="text-secondary mt-1 max-w-2xl text-sm leading-relaxed">Update your event details. Existing participants will not be automatically notified of minor textual changes.</p>
+      </header>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 bg-white border border-border-base p-10 rounded-2xl shadow-sm">
-        {/* ── IMAGE UPLOAD ─────────────────────────────────── */}
-        <div className="space-y-4">
-          <label className="text-[14px] font-bold text-foreground block">Event Cover Image</label>
-          <div className="flex items-center gap-8">
-            <div className="w-[200px] h-[150px] bg-muted/5 rounded-xl border-2 border-dashed border-border-base flex items-center justify-center overflow-hidden relative">
-              {preview ? (
-                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-[12px] text-muted/40 font-mono text-center px-4">No image selected</span>
-              )}
-            </div>
-            <div className="flex-1 space-y-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-muted
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-lg file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-accent/10 file:text-accent
-                  hover:file:bg-accent/20 cursor-pointer"
+      <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-8 md:p-12 ambient-shadow">
+        {error && (
+          <div className="mb-8 p-4 bg-error/5 text-error border border-error/10 rounded-xl text-xs font-semibold animate-slide-up flex items-center gap-3">
+             <span className="material-symbols-outlined text-lg">error_outline</span>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+          
+          {/* ── IMAGE SECTION ─────────────────────────────────── */}
+          <div className="space-y-4">
+             <label className="block font-label text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Visual Identity</label>
+             <div className="flex flex-col sm:flex-row items-center gap-8">
+                <div className="w-full sm:w-[240px] aspect-video bg-surface-container border-2 border-dashed border-outline-variant/20 rounded-2xl flex items-center justify-center overflow-hidden relative group">
+                   {preview ? (
+                     <img src={preview} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                   ) : (
+                     <div className="flex flex-col items-center gap-2 opacity-30">
+                        <span className="material-symbols-outlined text-4xl">add_a_photo</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+                     </div>
+                   )}
+                </div>
+                <div className="flex-1 space-y-3 w-full">
+                   <p className="text-xs text-secondary leading-relaxed">Update the cover image to keep your event visual fresh or accurate.</p>
+                   <label className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-low hover:bg-surface-container transition-colors rounded-lg cursor-pointer border border-outline-variant/10">
+                      <span className="material-symbols-outlined text-lg text-primary">upload_file</span>
+                      <span className="text-xs font-bold text-on-surface uppercase tracking-tight">Change Image</span>
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                   </label>
+                </div>
+             </div>
+          </div>
+
+          <hr className="border-outline-variant/10" />
+
+          {/* ── CORE DETAILS ─────────────────────────────────── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+            <div className="md:col-span-2">
+              <Input 
+                label="Event Title" 
+                {...register("title")} 
+                error={errors.title?.message} 
               />
-              <p className="text-[12px] text-muted italic">Selecting a new image will replace the current one.</p>
+            </div>
+
+            <div className="md:col-span-2">
+               <Input 
+                label="Location / Venue" 
+                {...register("venue")} 
+                error={errors.venue?.message} 
+              />
+            </div>
+
+            <Input 
+              label="Date & Time" 
+              type="datetime-local" 
+              {...register("date")} 
+              error={errors.date?.message} 
+            />
+
+            <div className="space-y-1.5">
+               <label className="block font-label text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Visibility</label>
+               <select 
+                 {...register("visibility")} 
+                 className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body text-sm focus:outline-none focus:ring-0 focus:border-primary focus:border-2 transition-all duration-200"
+               >
+                 <option value="PUBLIC">Public — Discoverable by everyone</option>
+                 <option value="PRIVATE">Private — Invitation only</option>
+               </select>
+            </div>
+
+            <div className="space-y-1.5">
+               <label className="block font-label text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Category</label>
+               <select 
+                 {...register("category")} 
+                 className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body text-sm focus:outline-none focus:ring-0 focus:border-primary focus:border-2 transition-all duration-200"
+               >
+                 {["Workshop", "Conference", "Meetup", "Social", "Educational", "Business", "Other"].map(cat => (
+                   <option key={cat} value={cat}>{cat}</option>
+                 ))}
+               </select>
+            </div>
+
+            <Input 
+              label="Registration Fee (BDT)" 
+              type="number" 
+              step="0.01"
+              min={0} 
+              {...register("fee", { valueAsNumber: true })} 
+              error={errors.fee?.message} 
+            />
+
+            <div className="md:col-span-2">
+              <Input
+                label="Detailed Description"
+                isTextArea
+                {...register("description")}
+                error={errors.description?.message}
+              />
             </div>
           </div>
-        </div>
 
-        {/* ── BASIC INFO ──────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Input label="Event Title" {...register("title")} error={errors.title?.message} />
-          <Input label="Venue" {...register("venue")} error={errors.venue?.message} />
-          <Input label="Date" type="datetime-local" {...register("date")} error={errors.date?.message} />
-          <div className="space-y-2">
-            <label className="text-[14px] font-bold text-foreground">Category</label>
-            <select
-              {...register("category")}
-              className="w-full h-[42px] px-3.5 border border-border-base rounded-radius-input text-[14px] outline-none focus:border-accent"
-            >
-              <option value="Public Free">Public Free</option>
-              <option value="Public Paid">Public Paid</option>
-              <option value="Private Free">Private Free</option>
-              <option value="Private Paid">Private Paid</option>
-            </select>
+          <div className="flex flex-col sm:flex-row gap-4 pt-12 border-t border-outline-variant/10">
+            <Button size="lg" type="submit" disabled={loading} icon="save" className="px-10">
+              {loading ? "Saving Changes..." : "Save Changes"}
+            </Button>
+            <Button variant="ghost" type="button" onClick={() => router.back()} className="text-secondary hover:text-on-surface">
+              Cancel
+            </Button>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Input label="Fee (Amount in Cents)" type="number" {...register("feeCents", { valueAsNumber: true })} error={errors.feeCents?.message} />
-          <div className="space-y-2">
-            <label className="text-[14px] font-bold text-foreground">Visibility</label>
-            <div className="flex gap-4 pt-1">
-              {["PUBLIC", "PRIVATE"].map((v) => (
-                <label key={v} className="flex items-center gap-2 cursor-pointer text-[14px] font-medium text-muted">
-                  <input type="radio" value={v} {...register("visibility")} className="accent-accent" />
-                  {v}
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-[14px] font-bold text-foreground">Description</label>
-          <textarea
-            {...register("description")}
-            rows={5}
-            className="w-full p-4 border border-border-base rounded-2xl text-[14px] outline-none focus:border-accent resize-none"
-          />
-          {errors.description && <p className="text-[12px] text-danger font-medium">{errors.description.message}</p>}
-        </div>
-
-        <div className="pt-6 border-t border-border-base flex justify-end gap-4">
-          <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
-          <Button type="submit" variant="primary" disabled={loading}>
-            {loading ? "Updating..." : "Update Event"}
-          </Button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill, StatusPill } from "@/components/ui/Pill";
+import { StarRating } from "@/components/ui/StarRating";
 
 export default function EventDetailsPage() {
   const { id } = useParams();
@@ -34,174 +35,232 @@ export default function EventDetailsPage() {
     if (id) fetchEvent();
   }, [id, user]);
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted font-medium">Loading event details…</div>;
-  if (!event) return <div className="min-h-screen bg-background flex items-center justify-center text-muted font-medium font-sans px-8 text-center uppercase tracking-widest">Event not found</div>;
+  if (loading) return (
+    <div className="flex-1 flex items-center justify-center bg-surface">
+      <div className="animate-pulse flex flex-col items-center gap-4">
+        <div className="text-2xl font-headline font-bold text-on-surface">Planora</div>
+        <div className="text-sm text-secondary">Loading details…</div>
+      </div>
+    </div>
+  );
+
+  if (!event) return (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+      <span className="material-symbols-outlined text-[64px] text-secondary/30">event_busy</span>
+      <h3 className="font-headline text-2xl font-semibold text-on-surface">Event not found</h3>
+      <Button onClick={() => router.push("/events")}>Back to events</Button>
+    </div>
+  );
+
+  const displayFee = event.fee ?? (event.feeCents ? event.feeCents / 100 : 0);
 
   const actionBtnLabel = () => {
-    const isPaid = event.feeCents > 0;
-    const isPublic = event.visibility === "PUBLIC";
-    if (isPublic) return isPaid ? `Pay & Join — ৳${(event.feeCents / 100).toLocaleString()}` : "Join event";
-    return isPaid ? `Pay & Request — ৳${(event.feeCents / 100).toLocaleString()}` : "Request to Join";
+    const isPaid = displayFee > 0;
+    const isPublic = event.visibility?.toLowerCase() === "public";
+    if (isPublic) return isPaid ? `Pay & Join — ৳${displayFee.toLocaleString()}` : "Join event";
+    return isPaid ? `Pay & Request — ৳${displayFee.toLocaleString()}` : "Request to Join";
   };
 
   const handleAction = async () => {
-    if (!user) { window.location.href = "/login"; return; }
-    const isPaid = event.feeCents > 0;
+    if (!user) { router.push("/login"); return; }
+    const isPaid = displayFee > 0;
     if (isPaid) {
       try {
         const { data } = await api.post("/payments/checkout", { eventId: event.id });
         window.location.href = data.url;
       } catch (err: any) {
-        alert(err.response?.data?.error?.message || "Payment failed");
+        alert(err.response?.data?.message || "Payment service unavailable");
       }
     } else {
       try {
         await api.post(`/events/${event.id}/join`);
-        alert("Successfully joined!");
+        alert("Success! You've joined the event.");
         window.location.reload();
       } catch (err: any) {
-        alert(err.response?.data?.error?.message || "Could not join event");
+        alert(err.response?.data?.message || "Could not join event");
       }
     }
   };
 
   return (
-    <div className="bg-background min-h-screen pt-[60px] font-sans pb-20">
+    <div className="bg-surface min-h-screen">
       
-      {/* Cover Image */}
-      <div 
-        className="h-[320px] flex items-center justify-center text-[12px] font-mono text-white opacity-50 border-b border-border-base font-sans"
-        style={{ backgroundColor: event.coverImage || "#C7D4E8" }}
-      >
-        event cover image — 1200×320
+      {/* ── COVER IMAGE ─────────────────────────────────────── */}
+      <div className="w-full h-[320px] md:h-[480px] relative overflow-hidden bg-surface-container-high border-b border-outline-variant/10">
+        {event.coverImage ? (
+          <img 
+            src={event.coverImage} 
+            alt={event.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-8xl font-headline font-extrabold text-secondary opacity-10 uppercase">
+             {event.title[0]}
+          </div>
+        )}
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-8 py-10">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 -mt-20 relative z-10 pb-24">
         
-        {/* Back Link */}
-        <button 
-          onClick={() => router.push("/events")}
-          className="bg-none border-none text-muted text-[14px] cursor-pointer font-inherit mb-6 flex items-center gap-2 hover:text-foreground transition-colors"
-        >
-          ← Back to events
-        </button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 items-start">
           
-          {/* ── LEFT COLUMN ──────────────────────────────── */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-3 mb-4">
-              <CategoryPill type={event.visibility} feeCents={event.feeCents} />
-              {event.isFeatured && <StatusPill status="featured" />}
-            </div>
+          {/* ── LEFT COLUMN: CONTENT ─────────────────────────── */}
+          <div className="space-y-12">
             
-            <h1 className="text-[36px] font-bold text-foreground tracking-[-0.03em] font-tight mb-4 leading-tight">
-              {event.title}
-            </h1>
+            {/* Header Card */}
+            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-8 md:p-12 ambient-shadow">
+               <div className="flex flex-wrap items-center gap-4 mb-6">
+                  <CategoryPill type={event.visibility} fee={displayFee} />
+                  {event.isFeatured && <StatusPill status="featured" />}
+                  <span className="flex items-center gap-1 text-xs font-bold text-secondary uppercase tracking-widest">
+                     <span className="material-symbols-outlined text-base">group</span>
+                     {event._count?.participants || 0} Registered
+                  </span>
+               </div>
 
-            <div className="flex flex-wrap gap-x-8 gap-y-4 mb-8">
-              {[
-                { icon: "📅", text: `${new Date(event.date).toLocaleDateString()} · ${event.time || "TBA"}` },
-                { icon: "📍", text: event.venue },
-                { icon: "👤", text: `Organized by ${event.owner?.name || "Organizer"}` },
-                { icon: "👥", text: `${event._count?.participants || 0} participants` },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-[14px] text-muted">
-                  <span>{item.icon}</span>
-                  <span>{item.text}</span>
-                </div>
-              ))}
+               <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-semibold tracking-[-0.04em] leading-[1.1] text-on-surface mb-8">
+                {event.title}
+               </h1>
+
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-8 border-y border-outline-variant/10">
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined">calendar_today</span>
+                     </div>
+                     <div>
+                        <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-1">Date & Time</p>
+                        <p className="font-headline font-semibold text-on-surface">
+                           {new Date(event.date).toLocaleDateString("en-US", { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </p>
+                        <p className="text-sm text-secondary">{event.time || "Event starts at 18:30"}</p>
+                     </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined">location_on</span>
+                     </div>
+                     <div>
+                        <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-1">Location</p>
+                        <p className="font-headline font-semibold text-on-surface">{event.venue}</p>
+                        <p className="text-sm text-secondary">Physical Presence Required</p>
+                     </div>
+                  </div>
+               </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-border-base mb-8">
+            <div className="border-b border-outline-variant/20 flex gap-8">
               {["details", "reviews"].map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t as any)}
-                  className={`px-5 py-2.5 text-[14px] font-medium transition-colors border-b-2 -mb-px capitalize
-                    ${tab === t ? "text-accent border-accent" : "text-muted border-transparent hover:text-foreground"}`}
+                  className={`pb-4 font-headline font-semibold tracking-[-0.02em] whitespace-nowrap transition-all border-b-2 uppercase text-xs tracking-widest
+                    ${tab === t ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
                 >
                   {t} {t === "reviews" ? `(${event._count?.reviews || 0})` : ""}
                 </button>
               ))}
             </div>
 
-            {tab === "details" && (
-              <div className="text-[15px] text-foreground leading-[1.8] max-w-[600px] space-y-5 animate-fade-in">
-                <p>{event.description}</p>
-                <p>
-                  This event is open to professionals at all levels. Whether you're pre-launch or post-Series A, 
-                  the Planora platform provides the best space to grow your network and get honest feedback 
-                  from peers who understand the local landscape.
-                </p>
-                <p>
-                  Doors open 30 minutes before the start time. Light refreshments will be available throughout the session.
-                </p>
-              </div>
-            )}
+            <div className="animate-fade-in min-h-[300px]">
+               {tab === "details" ? (
+                  <div className="space-y-8 max-w-2xl">
+                     <div className="font-body text-lg leading-relaxed text-secondary whitespace-pre-wrap">
+                        {event.description || "No description provided."}
+                     </div>
+                     
+                     <div className="bg-surface-container-low/30 rounded-xl p-8 border border-outline-variant/10">
+                        <h4 className="font-headline font-bold text-on-surface mb-4">About the Organizer</h4>
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">
+                              {event.owner?.name?.[0] || 'O'}
+                           </div>
+                           <div>
+                              <p className="font-headline font-semibold text-on-surface">{event.owner?.name || "Event Organizer"}</p>
+                              <p className="text-sm text-secondary">Verified Community Member</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               ) : (
+                  <div className="space-y-8 max-w-2xl">
+                     {/* Review Summary */}
+                     <div className="p-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-center gap-8 ambient-shadow">
+                        <div className="text-5xl font-headline font-bold text-on-surface tabular-nums leading-none">
+                           {event._count?.reviews > 0 ? (event.avgRating || 0).toFixed(1) : "—"}
+                        </div>
+                        <div>
+                           <StarRating rating={event.avgRating || 0} />
+                           <p className="text-sm text-secondary mt-1 font-medium">Based on {event._count?.reviews || 0} verified reviews</p>
+                        </div>
+                     </div>
 
-            {tab === "reviews" && (
-              <div className="animate-fade-in space-y-8">
-                <div className="p-5 bg-white border border-border-base rounded-[12px] flex items-center gap-6">
-                  <div className="text-[40px] font-bold text-foreground tabular-nums leading-none">
-                    {event._count?.reviews > 0 ? (event.avgRating || 0).toFixed(1) : "—"}
+                     {/* Reviews List Placeholder */}
+                     <div className="py-20 text-center space-y-4">
+                        <span className="material-symbols-outlined text-[48px] text-secondary/30">rate_review</span>
+                        <p className="text-secondary text-sm">No detailed reviews have been left for this event yet.</p>
+                     </div>
                   </div>
-                  <div>
-                    <div className="flex gap-0.5 text-[#F59E0B] text-[20px]">★★★★★</div>
-                    <div className="text-[13px] text-muted mt-1">
-                      Based on {event._count?.reviews || 0} reviews
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="py-12 text-center text-muted text-[14px] border-t border-border-base">
-                  No detailed reviews yet for this event.
-                </div>
-              </div>
-            )}
+               )}
+            </div>
           </div>
 
-          {/* ── RIGHT COLUMN (sticky panel) ──────────────── */}
-          <div className="sticky top-[80px]">
-            <div className="bg-white rounded-[12px] border border-border-base p-6 mb-4 shadow-sm">
-              <div className="text-[28px] font-bold text-foreground tabular-nums mb-1">
-                {event.feeCents === 0 ? "Free" : `৳${(event.feeCents/100).toLocaleString()}`}
-              </div>
-              <div className="text-[13px] text-muted mb-6">
-                {event._count?.participants || 0} registered · {isOwner ? "You own this event" : "Public"}
-              </div>
-              
-              <Button variant="primary" className="w-full h-[46px] text-[15px] font-bold" onClick={handleAction}>
-                {actionBtnLabel()}
-              </Button>
+          {/* ── RIGHT COLUMN: STICKY PANEL ─────────────────── */}
+          <div className="lg:sticky lg:top-28 space-y-6">
+            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-8 shadow-xl ambient-shadow">
+               <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-2">Registration Fee</p>
+               <div className="text-4xl font-headline font-bold text-on-surface mb-6 tabular-nums">
+                  {displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}
+               </div>
+               
+               <Button 
+                  variant="primary" 
+                  size="lg" 
+                  className="w-full py-6" 
+                  onClick={handleAction}
+                  icon="rocket_launch"
+               >
+                  {actionBtnLabel()}
+               </Button>
+               
+               <div className="mt-6 space-y-4 pt-6 border-t border-outline-variant/10">
+                  <div className="flex items-center gap-3 text-xs font-medium text-secondary">
+                     <span className="material-symbols-outlined text-base">verified_user</span>
+                     Secure payment via Stripe test mode
+                  </div>
+                  <div className="flex items-center gap-3 text-xs font-medium text-secondary">
+                     <span className="material-symbols-outlined text-base">mail</span>
+                     Invitation & Ticket sent to your email
+                  </div>
+               </div>
             </div>
 
-            {/* Owner controls */}
-            <div className="bg-white rounded-[12px] border border-border-base p-6 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <div className="text-[13px] font-bold text-foreground">Controls</div>
-                {isOwner && <span className="bg-success/10 text-success text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Owner Profile</span>}
-              </div>
-              {isOwner ? (
-                <div className="flex flex-col gap-2.5">
-                  <Button variant="secondary" small className="w-full">Edit event details</Button>
+            {/* Quick Links / Breadcrumb */}
+            <Button 
+               variant="ghost" 
+               size="sm" 
+               className="w-full"
+               onClick={() => router.push("/events")}
+               icon="arrow_back"
+            >
+               Back to Exploration
+            </Button>
+
+            {/* Owner Controls (if applicable) */}
+            {isOwner && (
+               <div className="bg-primary/5 rounded-2xl border border-primary/20 p-8 space-y-4">
+                  <h4 className="font-headline font-bold text-primary uppercase text-xs tracking-widest">Host Controls</h4>
+                  <p className="text-xs text-primary/70 mb-4">You are the creator of this event. Manage participants or edit details below.</p>
                   <Button 
-                    variant="secondary" 
-                    small 
-                    className="w-full"
-                    onClick={() => router.push(`/dashboard/events/${event.id}`)}
-                  >
-                    Manage participants
+                     variant="outline" 
+                     className="w-full text-primary border-primary/20 hover:bg-primary/5"
+                     onClick={() => router.push(`/dashboard/events/${event.id}`)}
+                     icon="manage_accounts"
+                   >
+                     Manage Participants
                   </Button>
-                  <Button variant="danger" small className="w-full">Delete event permanent</Button>
-                </div>
-              ) : (
-                <div className="text-[13px] text-muted leading-relaxed">
-                  Management controls are only visible to the event host. Log in as the organizer to moderate participants.
-                </div>
-              )}
-            </div>
+               </div>
+            )}
           </div>
 
         </div>

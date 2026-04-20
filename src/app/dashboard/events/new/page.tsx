@@ -17,8 +17,8 @@ const eventSchema = z.object({
   }),
   venue: z.string().min(2, "Venue is required"),
   visibility: z.enum(["PUBLIC", "PRIVATE"]),
-  feeCents: z.number().min(0, "Fee cannot be negative"),
-  coverImage: z.string().optional(),
+  category: z.string().min(1, "Please select a category"),
+  fee: z.number().min(0, "Fee cannot be negative"), // BDT
 });
 
 type EventForm = z.infer<typeof eventSchema>;
@@ -27,97 +27,183 @@ export default function CreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm<EventForm>({
     resolver: zodResolver(eventSchema),
-    defaultValues: { visibility: "PUBLIC", feeCents: 0 },
+    defaultValues: { visibility: "PUBLIC", fee: 0 },
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = async (data: EventForm) => {
     setLoading(true);
     setError(null);
     try {
-      await api.post("/events", data);
+      const formData = new FormData();
+      
+      // Append basic fields
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("date", data.date);
+      formData.append("venue", data.venue);
+      formData.append("visibility", data.visibility);
+      formData.append("category", data.category);
+      formData.append("feeCents", Math.round(data.fee * 100).toString()); // Convert BDT to Cents
+
+      // Append image if selected
+      if (image) {
+        formData.append("coverImage", image);
+      }
+
+      await api.post("/events", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || "Failed to create event.");
+      setError(err.response?.data?.error?.message || "Failed to launch event. Please verify all fields.");
     } finally {
       setLoading(false);
     }
   };
 
-  const inputStyle = "w-full h-[40px] px-3 border border-border-base rounded-[8px] text-[14px] outline-none focus:border-accent bg-background text-foreground";
-
   return (
-    <div>
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.back()} className="text-muted text-[14px] cursor-pointer hover:text-foreground bg-none border-none font-inherit">← Back</button>
-        <h1 className="text-[28px] font-bold text-foreground tracking-[-0.02em] m-0">Create event</h1>
-      </div>
+    <div className="space-y-12 max-w-4xl">
+      <header className="space-y-4">
+        <nav className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-[0.2em] leading-none">
+           <button onClick={() => router.back()} className="hover:text-primary transition-colors">Dashboard</button>
+           <span className="material-symbols-outlined text-[14px] opacity-30">chevron_right</span>
+           <span className="text-on-surface">New Event</span>
+        </nav>
+        <h1 className="font-headline text-4xl font-semibold tracking-[-0.04em] text-on-surface">Launch a new experience</h1>
+        <p className="text-secondary mt-1 max-w-2xl text-sm leading-relaxed">Define your event details below. Once published, your community will be notified and can begin registering immediately.</p>
+      </header>
 
-      <div className="bg-white rounded-[12px] border border-border-base p-8">
+      <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-8 md:p-12 ambient-shadow">
         {error && (
-          <div className="mb-6 p-3 bg-danger/5 text-danger border border-danger/10 rounded-[8px] text-[13px]">
+          <div className="mb-8 p-4 bg-error/5 text-error border border-error/10 rounded-xl text-xs font-semibold animate-slide-up flex items-center gap-3">
+             <span className="material-symbols-outlined text-lg">error</span>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-2 gap-5">
-            <div className="col-span-2">
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Event title</label>
-              <input {...register("title")} placeholder="e.g. Dhaka Startup Mixer" className={inputStyle} />
-              {errors.title && <p className="text-[12px] text-danger mt-1">{errors.title.message}</p>}
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-12">
+          
+          {/* ── IMAGE SECTION ─────────────────────────────────── */}
+          <div className="space-y-4">
+             <label className="block font-label text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Visual Identity</label>
+             <div className="flex flex-col sm:flex-row items-center gap-8">
+                <div className="w-full sm:w-[240px] aspect-video bg-surface-container border-2 border-dashed border-outline-variant/20 rounded-2xl flex items-center justify-center overflow-hidden relative group">
+                   {preview ? (
+                     <img src={preview} alt="Preview" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                   ) : (
+                     <div className="flex flex-col items-center gap-2 opacity-30">
+                        <span className="material-symbols-outlined text-4xl">add_a_photo</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">No Image</span>
+                     </div>
+                   )}
+                </div>
+                <div className="flex-1 space-y-3 w-full">
+                   <p className="text-xs text-secondary leading-relaxed">Upload a high-resolution cover image. This will be the first thing participants see.</p>
+                   <label className="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-low hover:bg-surface-container transition-colors rounded-lg cursor-pointer border border-outline-variant/10">
+                      <span className="material-symbols-outlined text-lg text-primary">upload_file</span>
+                      <span className="text-xs font-bold text-on-surface uppercase tracking-tight">Select File</span>
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                   </label>
+                </div>
+             </div>
+          </div>
 
-            <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Date & time</label>
-              <input type="datetime-local" {...register("date")} className={inputStyle} />
-              {errors.date && <p className="text-[12px] text-danger mt-1">{errors.date.message}</p>}
-            </div>
+          <hr className="border-outline-variant/10" />
 
-            <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Venue</label>
-              <input {...register("venue")} placeholder="e.g. The Daily Star Centre" className={inputStyle} />
-              {errors.venue && <p className="text-[12px] text-danger mt-1">{errors.venue.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Registration fee (cents, 0 = free)</label>
-              <input type="number" min={0} {...register("feeCents", { valueAsNumber: true })} placeholder="0" className={inputStyle} />
-              {errors.feeCents && <p className="text-[12px] text-danger mt-1">{errors.feeCents.message}</p>}
-            </div>
-
-            <div>
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Visibility</label>
-              <select {...register("visibility")} className={inputStyle}>
-                <option value="PUBLIC">Public</option>
-                <option value="PRIVATE">Private</option>
-              </select>
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Cover image URL (optional)</label>
-              <input {...register("coverImage")} placeholder="https://..." className={inputStyle} />
-            </div>
-
-            <div className="col-span-2">
-              <label className="block text-[13px] font-medium text-foreground mb-1.5">Description</label>
-              <textarea
-                {...register("description")}
-                placeholder="Describe your event…"
-                rows={4}
-                className="w-full px-3 py-2.5 border border-border-base rounded-[8px] text-[14px] outline-none focus:border-accent bg-background text-foreground resize-vertical"
+          {/* ── CORE DETAILS ─────────────────────────────────── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+            <div className="md:col-span-2">
+              <Input 
+                label="Event Title" 
+                placeholder="e.g. Dhaka Founders Mixer" 
+                {...register("title")} 
+                error={errors.title?.message} 
               />
-              {errors.description && <p className="text-[12px] text-danger mt-1">{errors.description.message}</p>}
+            </div>
+
+            <div className="md:col-span-2">
+               <Input 
+                label="Location / Venue" 
+                placeholder="e.g. The Daily Star Centre, Floor 3" 
+                {...register("venue")} 
+                error={errors.venue?.message} 
+              />
+            </div>
+
+            <Input 
+              label="Date & Time" 
+              type="datetime-local" 
+              {...register("date")} 
+              error={errors.date?.message} 
+            />
+
+            <div className="space-y-1.5">
+               <label className="block font-label text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Visibility</label>
+               <select 
+                 {...register("visibility")} 
+                 className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body text-sm focus:outline-none focus:ring-0 focus:border-primary focus:border-2 transition-all duration-200"
+               >
+                 <option value="PUBLIC">Public — Discoverable by everyone</option>
+                 <option value="PRIVATE">Private — Invitation only</option>
+               </select>
+            </div>
+
+            <div className="space-y-1.5">
+               <label className="block font-label text-[10px] font-bold text-secondary uppercase tracking-[0.2em]">Category</label>
+               <select 
+                 {...register("category")} 
+                 className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg px-4 py-3 text-on-surface font-body text-sm focus:outline-none focus:ring-0 focus:border-primary focus:border-2 transition-all duration-200"
+               >
+                 {["Workshop", "Conference", "Meetup", "Social", "Educational", "Business", "Other"].map(cat => (
+                   <option key={cat} value={cat}>{cat}</option>
+                 ))}
+               </select>
+            </div>
+
+            <Input 
+              label="Registration Fee (BDT)" 
+              type="number" 
+              step="0.01"
+              min={0} 
+              {...register("fee", { valueAsNumber: true })} 
+              placeholder="0.00 for free" 
+              error={errors.fee?.message} 
+            />
+
+            <div className="md:col-span-2">
+              <Input
+                label="Detailed Description"
+                placeholder="What should guests expect? Mention the agenda, speakers, or requirements."
+                isTextArea
+                {...register("description")}
+                error={errors.description?.message}
+              />
             </div>
           </div>
 
-          <div className="flex gap-3 mt-6">
-            <Button variant="primary" type="submit" disabled={loading}>
-              {loading ? "Creating…" : "Create event"}
+          <div className="flex flex-col sm:flex-row gap-4 pt-12 border-t border-outline-variant/10">
+            <Button size="lg" type="submit" disabled={loading} icon="rocket_launch" className="px-10">
+              {loading ? "Publishing..." : "Launch Event"}
             </Button>
-            <Button variant="secondary" type="button" onClick={() => router.back()}>Cancel</Button>
+            <Button variant="ghost" type="button" onClick={() => router.back()} className="text-secondary hover:text-error hover:bg-error/5">
+              Discard Draft
+            </Button>
           </div>
         </form>
       </div>

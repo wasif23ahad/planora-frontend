@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -63,25 +64,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background font-sans pt-20">
-      <div className="w-full max-w-[400px] bg-white rounded-[16px] border border-border-base p-[40px_40px_36px] shadow-sm animate-fade-in">
+    <div className="flex-1 flex items-center justify-center p-4">
+      <div className="w-full max-w-[440px] bg-surface-container-lowest rounded-xl border border-outline-variant/20 ambient-shadow p-8 flex flex-col items-center">
         
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-[22px] font-bold tracking-[-0.03em] text-foreground font-tight mb-1.5">Planora</div>
-          <div className="text-[13px] text-muted">Create your account. Start hosting and attending exclusive events.</div>
+          <h1 className="font-headline text-3xl font-semibold text-on-surface mb-2">Planora</h1>
+          <p className="font-body text-secondary text-sm">Create your account. Join the community.</p>
         </div>
 
         {success ? (
-          <div className="text-center py-10">
-            <div className="text-[28px] mb-4">✓</div>
-            <div className="text-[15px] font-bold text-success capitalize">Account created!</div>
-            <div className="text-[13px] text-muted mt-2">Redirecting to dashboard…</div>
+          <div className="text-center py-10 animate-fade-in">
+            <div className="text-[48px] mb-4 text-primary">✓</div>
+            <div className="text-xl font-bold font-headline text-on-surface">Account created!</div>
+            <div className="text-sm text-secondary mt-2">Redirecting to dashboard…</div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
             {error && (
-              <div className="bg-danger/5 text-danger border border-danger/10 rounded-[8px] p-3 text-[13px] text-center mb-4 font-medium animate-fade-in">
+              <div className="bg-error/5 text-error border border-error/10 rounded-lg p-3 text-xs text-center mb-4 font-medium animate-slide-up">
                 {error}
               </div>
             )}
@@ -114,20 +115,19 @@ export default function RegisterPage() {
               error={errors.confirmPassword?.message}
             />
 
-            <div className="pt-2">
-              <button 
+            <div className="pt-4">
+              <Button 
                 type="submit" 
+                className="w-full"
                 disabled={isLoading}
-                className={`w-full h-[42px] text-white border-none rounded-[10px] text-[14px] font-medium transition-all cursor-pointer 
-                  ${isLoading ? "bg-[#9B93FF]" : "bg-accent hover:opacity-90 active:opacity-100"}`}
               >
                 {isLoading ? "Creating account…" : "Create account"}
-              </button>
+              </Button>
             </div>
 
-            <div className="text-center pt-6 text-[13px] text-muted">
+            <div className="text-center pt-6 text-sm text-secondary">
               Already have an account?{" "}
-              <Link href="/login" className="text-accent font-bold hover:underline">
+              <Link href="/login" className="text-primary font-bold hover:underline decoration-primary underline-offset-4">
                 Log in
               </Link>
             </div>

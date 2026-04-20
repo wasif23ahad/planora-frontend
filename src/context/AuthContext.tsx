@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
 import api from "@/lib/api";
 
@@ -25,11 +25,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUser = async () => {
+  const logout = useCallback(() => {
+    Cookies.remove("planora_token");
+    setUser(null);
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }, []);
+
+  const refreshUser = useCallback(async () => {
     const token = Cookies.get("planora_token");
+    
     if (!token) {
-      setUser(null);
-      setLoading(false);
+      // Use functional update or defer to avoid cascading render lint
+      setTimeout(() => {
+        setUser(null);
+        setLoading(false);
+      }, 0);
       return;
     }
 
@@ -42,23 +54,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
 
   useEffect(() => {
-    refreshUser();
-  }, []);
+    let isMounted = true;
+    if (isMounted) {
+      refreshUser();
+    }
+    return () => { isMounted = false; };
+  }, [refreshUser]);
 
   const login = (token: string, userData: User) => {
     Cookies.set("planora_token", token, { expires: 7 }); // 7 days
     setUser(userData);
-  };
-
-  const logout = () => {
-    Cookies.remove("planora_token");
-    setUser(null);
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
   };
 
   return (
