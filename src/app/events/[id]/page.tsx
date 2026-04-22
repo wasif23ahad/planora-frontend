@@ -226,7 +226,7 @@ export default function EventDetailsPage() {
                <div className="mt-6 space-y-4 pt-6 border-t border-outline-variant/10">
                   <div className="flex items-center gap-3 text-xs font-medium text-secondary">
                      <span className="material-symbols-outlined text-base">verified_user</span>
-                     Secure payment via Stripe test mode
+                     Secure payment via SSLCommerz
                   </div>
                   <div className="flex items-center gap-3 text-xs font-medium text-secondary">
                      <span className="material-symbols-outlined text-base">mail</span>

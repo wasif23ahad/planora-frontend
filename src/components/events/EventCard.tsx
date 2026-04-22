@@ -81,7 +81,7 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.05em] mb-0.5">Registration</span>
             <span className="text-sm font-headline font-bold text-on-surface tracking-tight">
-              {displayFee === 0 ? "Complimentary" : `৳${displayFee.toLocaleString()}`}
+              {displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}
             </span>
           </div>
           

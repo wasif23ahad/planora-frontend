@@ -48,8 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await api.get("/auth/me");
       setUser(data);
-    } catch (error) {
-      console.error("Failed to fetch user profile:", error);
+    } catch (error: any) {
+      if (error.response?.status !== 401) {
+        console.error("Failed to fetch user profile:", error);
+      }
       logout();
     } finally {
       setLoading(false);

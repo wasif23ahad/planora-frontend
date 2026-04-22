@@ -43,7 +43,7 @@ export default function LegalPage() {
               <div className="prose prose-stone dark:prose-invert max-w-none space-y-4 text-secondary leading-relaxed">
                  <p>Our Privacy Policy describes how your personal information is collected, used, and shared when you visit or make a purchase from Planora.</p>
                  <h4 className="text-on-surface font-semibold pt-4">Data Collection</h4>
-                 <p>We collect essential information like your name and email to process event tickets. We do not store credit card information on our servers; all payments are processed through Stripe.</p>
+                 <p>We collect essential information like your name and email to process event tickets. We do not store credit card information on our servers; all payments are processed through SSLCommerz.</p>
               </div>
            </section>
         </div>
