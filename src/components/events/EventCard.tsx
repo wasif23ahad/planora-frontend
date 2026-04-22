@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { CategoryPill } from "@/components/ui/Pill";
 
 interface Event {
@@ -36,10 +37,12 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
       {/* Cover Image Container */}
       <div className={`${isSlider ? 'h-[200px]' : 'aspect-video'} relative overflow-hidden bg-surface-container-high`}>
         {event.coverImage ? (
-          <img 
+          <Image 
             src={event.coverImage} 
             alt={event.title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-primary opacity-[0.03]">

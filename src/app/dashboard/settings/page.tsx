@@ -30,7 +30,7 @@ export default function SettingsPage() {
           ))}
         </div>
         <div className="mt-5">
-          <Button variant="primary" small>Save changes</Button>
+          <Button variant="primary" size="sm">Save changes</Button>
         </div>
       </div>
 

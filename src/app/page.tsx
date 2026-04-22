@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill } from "@/components/ui/Pill";
@@ -68,10 +69,12 @@ export default function Homepage() {
         <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant/20 overflow-hidden ambient-shadow">
           <div className="md:col-span-5 h-[400px] md:h-full relative overflow-hidden bg-surface-container-high">
             {heroEvent.coverImage ? (
-              <img 
+              <Image 
                 src={heroEvent.coverImage} 
-                alt="Event Cover" 
-                className="absolute inset-0 w-full h-full object-cover"
+                alt={heroEvent.title}
+                fill
+                priority
+                className="object-cover"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-4xl font-headline font-bold text-secondary opacity-20 capitalize">
