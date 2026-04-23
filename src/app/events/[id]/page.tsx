@@ -19,6 +19,10 @@ export default function EventDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"details" | "reviews">("details");
   const [isOwner, setIsOwner] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -36,6 +40,13 @@ export default function EventDetailsPage() {
           } catch (e) {
             console.error("Failed to fetch joined events", e);
           }
+        }
+        // Fetch reviews
+        try {
+          const { data: reviewsData } = await api.get(`/events/${id}/reviews`);
+          setReviews(reviewsData || []);
+        } catch (e) {
+          console.error("Failed to fetch reviews", e);
         }
       } catch (err) {
         console.error("Failed to fetch event:", err);
@@ -274,7 +285,12 @@ export default function EventDetailsPage() {
                       disabled={isPast}
                       icon={isPast ? "event_busy" : "rocket_launch"}
                    >
-                      {isPast ? "Registration Closed" : (displayFee > 0 ? "Pay & Join" : "Join Event")}
+                      {isPast 
+                        ? "Registration Closed" 
+                        : event.visibility === "PRIVATE"
+                          ? (displayFee > 0 ? "Pay & Request" : "Request to Join")
+                          : (displayFee > 0 ? "Pay & Join" : "Join Event")
+                      }
                    </Button>
                    
                    <div className="mt-6 space-y-4 pt-6 border-t border-outline-variant/10">

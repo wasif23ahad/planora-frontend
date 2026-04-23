@@ -50,16 +50,16 @@ export default function Homepage() {
     </div>
   );
 
-  // Find the nearest upcoming event (dynamic hero)
+  // Hero: prefer admin-featured event, fallback to nearest upcoming
   const now = new Date();
   const futureEvents = events
     .filter(e => new Date(e.date) >= now)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
-  const heroEvent = futureEvents[0] || events[0];
+  const heroEvent = featured || futureEvents[0] || events[0];
   
   // Normalize fee display
-  const heroFee = heroEvent?.fee ?? (heroEvent?.feeCents ? heroEvent.feeCents / 100 : 0);
+  const heroFee = heroEvent?.feeCents ? heroEvent.feeCents / 100 : (heroEvent?.fee ?? 0);
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 md:py-24 space-y-32">
