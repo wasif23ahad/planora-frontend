@@ -1,4 +1,6 @@
-import React, { forwardRef } from "react";
+"use client";
+
+import React, { forwardRef, useState } from "react";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
   label: string;
@@ -7,7 +9,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTe
 }
 
 export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputProps>(
-  ({ label, error, isTextArea, className = "", ...props }, ref) => {
+  ({ label, error, isTextArea, className = "", type, ...props }, ref) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const isPassword = type === "password";
+    const currentType = isPassword ? (showPassword ? "text" : "password") : type;
+
     const inputClasses = `
       w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg 
       px-4 py-3 text-on-surface font-body text-sm placeholder-secondary 
@@ -42,11 +48,25 @@ export const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, InputPro
         <label className="block font-label text-xs font-semibold text-on-surface uppercase tracking-widest">
           {label}
         </label>
-        <input
-          {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
-          ref={ref as React.ForwardedRef<HTMLInputElement>}
-          className={inputClasses}
-        />
+        <div className="relative">
+          <input
+            {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
+            type={currentType}
+            ref={ref as React.ForwardedRef<HTMLInputElement>}
+            className={`${inputClasses} ${isPassword ? "pr-12" : ""}`}
+          />
+          {isPassword && (
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors focus:outline-none"
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {showPassword ? "visibility_off" : "visibility"}
+              </span>
+            </button>
+          )}
+        </div>
         {error && (
           <p className="text-xs text-error font-medium animate-slide-up">
             {error}
