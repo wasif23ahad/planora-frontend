@@ -18,7 +18,7 @@ export default function Homepage() {
     const fetchData = async () => {
       try {
         const [eventsRes, featuredRes] = await Promise.allSettled([
-          api.get("/events?limit=9"),
+          api.get("/events?limit=9&upcoming=true"),
           api.get("/events/featured"),
         ]);
         if (eventsRes.status === "fulfilled") setEvents(eventsRes.value.data.items ?? []);

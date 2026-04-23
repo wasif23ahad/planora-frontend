@@ -22,10 +22,8 @@ export default function EventsPage() {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        // In a real app, we'd pass filters to the API. 
-        // For now, we'll fetch all and filter client-side for simplicity, 
-        // or just fetch with a high limit.
-        const res = await api.get("/events?limit=100");
+        // Fetch upcoming events only to match the UI context and avoid filling the limit with past events.
+        const res = await api.get("/events?limit=100&upcoming=true");
         setEvents(res.data.items ?? []);
       } catch (err) {
         console.error("Failed to fetch events:", err);
@@ -80,15 +78,6 @@ export default function EventsPage() {
                     className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
                   />
                   <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Public Events</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={filters.private}
-                    onChange={(e) => setFilters({...filters, private: e.target.checked})}
-                    className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Private Events</span>
                 </label>
               </div>
             </div>
