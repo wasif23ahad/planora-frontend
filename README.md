@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Planora - Full-Stack Events Platform 🚀
 
-## Getting Started
+Planora is a modern, responsive, and robust full-stack web application designed for seamless event management. It allows users to discover, join, and pay for events, while empowering event owners and administrators to manage participants and moderate the platform.
 
-First, run the development server:
+### 🌐 Live URLs
+- **Frontend Live**: [https://planora-frontend-green.vercel.app](https://planora-frontend-green.vercel.app)
+- **Backend Live**: [https://planora-backend-sigma.vercel.app](https://planora-backend-sigma.vercel.app)
 
+---
+
+## 📖 Project Overview
+
+Built as a submission for **Assignment 5**, this project perfectly aligns with the requirements of a production-style full-stack application. It implements comprehensive authentication, full CRUD operations, strict Role-Based Access Control (RBAC), and a highly polished UI/UX design.
+
+### ✨ Key Features
+
+*   **Beautiful Homepage Design**: Features a dynamic Hero section, comprehensive Categories, a grid of Upcoming Events, and a compelling Call-to-Action, framed by a responsive Navbar and Footer.
+*   **Premium UI/UX**: Built with Tailwind CSS, the application boasts a fully responsive design across all devices, consistent styling, interactive hover states, dynamic loading indicators, and intuitive toast notifications.
+*   **Secure Authentication**: Implements robust JWT-based authentication alongside seamless **Google OAuth 2.0** integration.
+*   **Role-Based Access Control (RBAC)**:
+    *   **User**: Can browse events, join free events, purchase tickets, and write reviews.
+    *   **Owner**: Can create and manage their own events, and send private email invitations.
+    *   **Admin**: Has access to a dedicated moderation dashboard to oversee the platform and safely delete user accounts.
+*   **Comprehensive CRUD**: Full Create, Read, Update, and Delete functionality applied to Events, Reviews, and Users.
+*   **Payment Integration**: Integrated with **SSLCommerz** for secure, real-time ticket purchases and seamless redirect flows.
+*   **Error Handling**: Complete with frontend form validation (React Hook Form + Zod), backend error catchers, and user-friendly error messages.
+
+---
+
+## 🛠️ Technology Stack
+
+*   **Framework**: [Next.js](https://nextjs.org/) (App Router, Server-Side Rendering)
+*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+*   **State Management & Data Fetching**: React Hooks, Axios
+*   **Form Validation**: React Hook Form + Zod
+*   **Icons**: Google Material Symbols
+*   **Deployment**: Vercel
+
+---
+
+## 🚀 Setup Instructions
+
+Follow these steps to run the frontend application locally on your machine.
+
+### 1. Prerequisites
+*   Node.js (v18 or higher)
+*   The Planora Backend API running locally (or you can connect to the deployed backend).
+
+### 2. Installation
+Clone the repository and install the dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd frontend
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Environment Variables
+Create a `.env.local` file in the root directory and configure the following variables:
+```env
+# Point this to your local backend (e.g., http://localhost:4000) or the deployed API
+NEXT_PUBLIC_API_URL=https://planora-backend-sigma.vercel.app
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# The URL of this frontend application
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Running the Development Server
+Start the Next.js development server:
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application running.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 👨‍💻 Admin Credentials for Testing
+To evaluate the RBAC functionality, you can log in using the pre-seeded admin account:
+*   **Email**: `admin@planora.com`
+*   **Password**: `password123`
