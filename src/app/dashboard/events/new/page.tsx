@@ -49,25 +49,18 @@ export default function CreateEventPage() {
     setLoading(true);
     setError(null);
     try {
-      const formData = new FormData();
-      
-      // Append basic fields
-      formData.append("title", data.title);
-      formData.append("description", data.description);
-      formData.append("date", data.date);
-      formData.append("venue", data.venue);
-      formData.append("visibility", data.visibility);
-      formData.append("category", data.category);
-      formData.append("feeCents", Math.round(data.fee * 100).toString()); // Convert BDT to Cents
+      const payload = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+        venue: data.venue,
+        visibility: data.visibility,
+        category: data.category,
+        feeCents: Math.round(data.fee * 100), // Convert BDT to Cents
+        coverImage: preview || null, // Send base64 string
+      };
 
-      // Append image if selected
-      if (image) {
-        formData.append("coverImage", image);
-      }
-
-      await api.post("/events", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      await api.post("/events", payload);
       
       router.push("/dashboard");
     } catch (err: any) {
