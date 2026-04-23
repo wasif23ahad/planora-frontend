@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
-export default function PaymentSuccessPage() {
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get("eventId");
@@ -27,3 +27,12 @@ export default function PaymentSuccessPage() {
     </div>
   );
 }
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div className="py-24 text-center">Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
+  );
+}
+

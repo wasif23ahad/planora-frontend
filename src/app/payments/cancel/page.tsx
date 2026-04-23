@@ -3,7 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
-export default function PaymentCancelPage() {
+import { Suspense } from "react";
+
+function CancelContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get("eventId");
@@ -28,3 +30,12 @@ export default function PaymentCancelPage() {
     </div>
   );
 }
+
+export default function PaymentCancelPage() {
+  return (
+    <Suspense fallback={<div className="py-24 text-center">Loading...</div>}>
+      <CancelContent />
+    </Suspense>
+  );
+}
+
