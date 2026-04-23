@@ -80,13 +80,16 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
         <div className="mt-auto flex justify-between items-center pt-4 border-t border-surface-container-low transition-colors group-hover:border-primary/10">
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-secondary uppercase tracking-[0.05em] mb-0.5">Registration</span>
-            <span className="text-sm font-headline font-bold text-on-surface tracking-tight">
-              {displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}
+            <span className={`text-sm font-headline font-bold tracking-tight ${new Date(event.date) < new Date() ? 'text-error' : 'text-on-surface'}`}>
+              {new Date(event.date) < new Date() 
+                ? "Closed" 
+                : (displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`)
+              }
             </span>
           </div>
           
           <div className="flex items-center gap-1.5 text-primary text-sm font-semibold group-hover:gap-2 transition-all">
-             {isSlider ? "Join" : "View"}
+             {new Date(event.date) < new Date() ? "Details" : (isSlider ? "Join" : "View")}
              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </div>
         </div>

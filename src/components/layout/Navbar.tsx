@@ -24,8 +24,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isAuthPage = ["/login", "/signup", "/register"].includes(pathname);
-  if (isAuthPage) return null;
+  // Removed isAuthPage check to allow Navbar on all pages as requested
 
   return (
     <nav 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +15,7 @@ export default function EventDetailsPage() {
   const { user } = useAuth();
   
   const [event, setEvent] = useState<any>(null);
+  const [participation, setParticipation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"details" | "reviews">("details");
   const [isOwner, setIsOwner] = useState(false);
@@ -23,8 +25,17 @@ export default function EventDetailsPage() {
       try {
         const { data } = await api.get(`/events/${id}`);
         setEvent(data);
-        if (user && data.ownerId === user.id) {
-          setIsOwner(true);
+        if (user) {
+          if (data.ownerId === user.id) setIsOwner(true);
+          
+          // Check if current user is already joined
+          try {
+            const { data: joinedData } = await api.get("/events/joined");
+            const myParticipation = joinedData.find((p: any) => p.eventId === id);
+            setParticipation(myParticipation);
+          } catch (e) {
+            console.error("Failed to fetch joined events", e);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch event:", err);
@@ -53,29 +64,46 @@ export default function EventDetailsPage() {
   );
 
   const displayFee = event.fee ?? (event.feeCents ? event.feeCents / 100 : 0);
-
-  const actionBtnLabel = () => {
-    const isPaid = displayFee > 0;
-    const isPublic = event.visibility?.toLowerCase() === "public";
-    if (isPublic) return isPaid ? `Pay & Join — ৳${displayFee.toLocaleString()}` : "Join event";
-    return isPaid ? `Pay & Request — ৳${displayFee.toLocaleString()}` : "Request to Join";
-  };
+  const isPast = new Date(event.date) < new Date();
 
   const handleAction = async () => {
     if (!user) { router.push("/login"); return; }
+    
+    if (participation) {
+      alert("You have already joined this event. Redirecting to your dashboard...");
+      router.push("/dashboard");
+      return;
+    }
+
+    if (isPast) {
+      alert("This event has already passed.");
+      return;
+    }
+
+    // Check if user info is complete (Name and Phone)
+    if (!user.name || !user.phoneNumber) {
+      router.push(`/events/${event.id}/checkout`);
+      return;
+    }
+
     const isPaid = displayFee > 0;
     if (isPaid) {
       try {
-        const { data } = await api.post("/payments/checkout", { eventId: event.id });
+        const { data } = await api.post("/payments/checkout", { 
+          eventId: event.id, 
+          phoneNumber: user.phoneNumber 
+        });
         window.location.href = data.url;
       } catch (err: any) {
         alert(err.response?.data?.message || "Payment service unavailable");
       }
     } else {
       try {
-        await api.post(`/events/${event.id}/join`);
+        await api.post(`/events/${event.id}/join`, { 
+          phoneNumber: user.phoneNumber 
+        });
         alert("Success! You've joined the event.");
-        window.location.reload();
+        router.push("/dashboard");
       } catch (err: any) {
         alert(err.response?.data?.message || "Could not join event");
       }
@@ -114,7 +142,7 @@ export default function EventDetailsPage() {
                   {event.isFeatured && <StatusPill status="featured" />}
                   <span className="flex items-center gap-1 text-xs font-bold text-secondary uppercase tracking-widest">
                      <span className="material-symbols-outlined text-base">group</span>
-                     {event._count?.participants || 0} Registered
+                     {event._count?.participations || 0} Registered
                   </span>
                </div>
 
@@ -208,31 +236,59 @@ export default function EventDetailsPage() {
           {/* ── RIGHT COLUMN: STICKY PANEL ─────────────────── */}
           <div className="lg:sticky lg:top-28 space-y-6">
             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-8 shadow-xl ambient-shadow">
-               <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-2">Registration Fee</p>
-               <div className="text-4xl font-headline font-bold text-on-surface mb-6 tabular-nums">
-                  {displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}
-               </div>
                
-               <Button 
-                  variant="primary" 
-                  size="lg" 
-                  className="w-full py-6" 
-                  onClick={handleAction}
-                  icon="rocket_launch"
-               >
-                  {actionBtnLabel()}
-               </Button>
-               
-               <div className="mt-6 space-y-4 pt-6 border-t border-outline-variant/10">
-                  <div className="flex items-center gap-3 text-xs font-medium text-secondary">
-                     <span className="material-symbols-outlined text-base">verified_user</span>
-                     Secure payment via SSLCommerz
-                  </div>
-                  <div className="flex items-center gap-3 text-xs font-medium text-secondary">
-                     <span className="material-symbols-outlined text-base">mail</span>
-                     Invitation & Ticket sent to your email
-                  </div>
-               </div>
+               {participation ? (
+                 <div className="space-y-6">
+                   <div className="flex items-center gap-3 text-success">
+                     <span className="material-symbols-outlined text-3xl">check_circle</span>
+                     <div>
+                       <p className="font-headline font-bold text-lg leading-tight">You're Registered!</p>
+                       <p className="text-xs text-secondary">Your spot is secured.</p>
+                     </div>
+                   </div>
+                   <Button 
+                     variant="primary" 
+                     size="lg" 
+                     className="w-full"
+                     onClick={() => router.push("/dashboard")}
+                     icon="dashboard"
+                   >
+                     Go to Dashboard
+                   </Button>
+                   <p className="text-xs text-center text-secondary">
+                     View your <Link href={`/dashboard/tickets/${participation.id}`} className="text-primary hover:underline font-bold">E-Ticket</Link>
+                   </p>
+                 </div>
+               ) : (
+                 <>
+                   <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-2">Registration Fee</p>
+                   <div className="text-4xl font-headline font-bold text-on-surface mb-6 tabular-nums">
+                      {displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}
+                   </div>
+                   
+                   <Button 
+                      variant={isPast ? "secondary" : "primary"} 
+                      size="lg" 
+                      className="w-full py-6" 
+                      onClick={handleAction}
+                      disabled={isPast}
+                      icon={isPast ? "event_busy" : "rocket_launch"}
+                   >
+                      {isPast ? "Registration Closed" : (displayFee > 0 ? "Pay & Join" : "Join Event")}
+                   </Button>
+                   
+                   <div className="mt-6 space-y-4 pt-6 border-t border-outline-variant/10">
+                      <div className="flex items-center gap-3 text-xs font-medium text-secondary">
+                         <span className="material-symbols-outlined text-base">verified_user</span>
+                         Secure payment via SSLCommerz
+                      </div>
+                      <div className="flex items-center gap-3 text-xs font-medium text-secondary">
+                         <span className="material-symbols-outlined text-base">mail</span>
+                         Ticket sent to your email
+                      </div>
+                   </div>
+                 </>
+               )}
             </div>
 
             {/* Quick Links / Breadcrumb */}
@@ -250,7 +306,7 @@ export default function EventDetailsPage() {
             {isOwner && (
                <div className="bg-primary/5 rounded-2xl border border-primary/20 p-8 space-y-4">
                   <h4 className="font-headline font-bold text-primary uppercase text-xs tracking-widest">Host Controls</h4>
-                  <p className="text-xs text-primary/70 mb-4">You are the creator of this event. Manage participants or edit details below.</p>
+                  <p className="text-xs text-primary/70 mb-4">You are the creator of this event.</p>
                   <Button 
                      variant="outline" 
                      className="w-full text-primary border-primary/20 hover:bg-primary/5"
