@@ -25,6 +25,16 @@ export default function UserModerationPage() {
     }
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Permanently delete "${name}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      setUsers(prev => prev.filter(u => u.id !== id));
+    } catch (err: any) {
+      alert(err.response?.data?.error?.message || "Failed to delete user");
+    }
+  };
+
   if (loading) return <div className="py-24 text-center text-secondary animate-pulse font-headline">Loading user manifest...</div>;
 
   return (
@@ -87,7 +97,7 @@ export default function UserModerationPage() {
                     <StatusPill status={u.isActive ? "active" : "suspended"} />
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant={u.isActive ? "outline" : "primary"}
                         size="sm"
@@ -96,6 +106,15 @@ export default function UserModerationPage() {
                         icon={u.isActive ? "block" : "verified_user"}
                       >
                         {u.isActive ? "Suspend" : "Activate"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(u.id, u.name)}
+                        className="text-error border-error/20 hover:bg-error/10"
+                        icon="delete"
+                      >
+                        Delete
                       </Button>
                     </div>
                   </td>
