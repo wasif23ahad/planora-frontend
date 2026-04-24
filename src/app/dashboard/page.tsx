@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import api from "@/lib/api";
+import planoraApi from "../../lib/api";
+const api = planoraApi;
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/Pill";
 import { useRouter } from "next/navigation";
@@ -110,7 +111,12 @@ export default function DashboardPage() {
                   ownedEvents.map((e) => (
                     <tr key={e.id} className="hover:bg-surface-container-low/50 transition-colors group">
                       <td className="px-6 py-5">
-                        <div className="font-medium text-on-surface">{e.title}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-medium text-on-surface">{e.title}</div>
+                          {e.pendingRequestsCount > 0 && (
+                            <span className="w-2 h-2 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgba(186,26,26,0.5)]"></span>
+                          )}
+                        </div>
                         <div className="text-secondary text-xs mt-1">{e.venue}</div>
                       </td>
                       <td className="px-6 py-5">
@@ -136,12 +142,24 @@ export default function DashboardPage() {
                           </button>
                           <button 
                             onClick={() => router.push(`/dashboard/events/${e.id}`)}
-                            className="text-secondary hover:text-primary transition-colors flex items-center gap-1 font-medium ml-4"
+                            className="relative text-secondary hover:text-primary transition-colors flex items-center gap-1 font-medium ml-4"
                           >
                             <span className="material-symbols-outlined text-[20px]">settings</span>
                             Manage
+                            {e.pendingRequestsCount > 0 && (
+                              <span className="absolute -top-2 -right-2 bg-error text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                                {e.pendingRequestsCount}
+                              </span>
+                            )}
                           </button>
                         </div>
+                        {e.pendingRequestsCount > 0 && (
+                          <div className="opacity-100 lg:group-hover:opacity-0 transition-opacity mt-1">
+                             <span className="text-[10px] text-error font-bold uppercase tracking-wider">
+                               {e.pendingRequestsCount} New Request{e.pendingRequestsCount > 1 ? 's' : ''}
+                             </span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))
