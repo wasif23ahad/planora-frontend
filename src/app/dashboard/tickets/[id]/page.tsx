@@ -55,7 +55,7 @@ export default function TicketPage() {
 
   return (
     <div className="min-h-screen bg-surface-container-lowest py-12 md:py-20 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto" id="ticket-container">
         
         {/* Ticket Wrapper */}
         <div className="bg-surface rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/20 relative">
@@ -158,10 +158,40 @@ export default function TicketPage() {
 
       <style jsx global>{`
         @media print {
-          body * { visibility: hidden; }
-          .max-w-2xl, .max-w-2xl * { visibility: visible; }
-          .max-w-2xl { position: absolute; left: 0; top: 0; width: 100%; margin: 0; }
-          .print\\:hidden { display: none; }
+          @page {
+            margin: 0;
+            size: auto;
+          }
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          .min-h-screen {
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          nav, footer, .print-hidden, .print\\:hidden {
+            display: none !important;
+          }
+          body * {
+            visibility: hidden;
+          }
+          #ticket-container, #ticket-container * {
+            visibility: visible;
+          }
+          #ticket-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 20mm !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
         }
       `}</style>
     </div>
