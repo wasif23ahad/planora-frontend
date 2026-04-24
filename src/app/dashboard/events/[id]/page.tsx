@@ -46,6 +46,22 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
     }
   };
 
+  const handleApproveRequest = async (userId: string, email: string) => {
+    if (event?.visibility === "PRIVATE") {
+      try {
+        await api.post(`/events/${id}/invite`, { email });
+        // Since it's an invite, let's remove them from the pending participants list or mark them as invited.
+        // The easiest is to just reject/remove the PENDING participation so it doesn't clutter,
+        // OR we can just leave it PENDING until they accept. Let's leave it PENDING but alert success.
+        alert(`Invitation sent to ${email}! They must accept it from their dashboard.`);
+      } catch (error: any) {
+        alert(error.response?.data?.message || "Failed to send invitation.");
+      }
+    } else {
+      handleUpdateStatus(userId, "APPROVED");
+    }
+  };
+
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail) return;
@@ -197,10 +213,10 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
                                 {p.status === "PENDING" && (
                                    <>
                                       <button 
-                                        onClick={() => handleUpdateStatus(p.userId, "APPROVED")}
+                                        onClick={() => handleApproveRequest(p.userId, p.user.email)}
                                         className="text-primary hover:opacity-80 transition-opacity font-medium text-xs border border-primary/20 rounded px-2 py-1"
                                       >
-                                        Approve
+                                        {event?.visibility === "PRIVATE" ? "Send Invite" : "Approve"}
                                       </button>
                                       <button 
                                         onClick={() => handleUpdateStatus(p.userId, "REJECTED")}

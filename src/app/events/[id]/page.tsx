@@ -98,6 +98,21 @@ export default function EventDetailsPage() {
     }
 
     const isPaid = displayFee > 0;
+    
+    // For Private events, users must ALWAYS request first, regardless of fee
+    if (event.visibility === "PRIVATE") {
+      try {
+        await api.post(`/events/${event.id}/join`, { 
+          phoneNumber: user.phoneNumber 
+        });
+        alert("Request sent successfully! The host will review your request.");
+        router.push("/dashboard");
+      } catch (err: any) {
+        alert(err.response?.data?.message || err.response?.data?.error?.message || "Could not send request");
+      }
+      return;
+    }
+
     if (isPaid) {
       try {
         const { data } = await api.post("/payments/checkout", { 
@@ -106,7 +121,7 @@ export default function EventDetailsPage() {
         });
         window.location.href = data.url;
       } catch (err: any) {
-        alert(err.response?.data?.message || "Payment service unavailable");
+        alert(err.response?.data?.message || err.response?.data?.error?.message || "Payment service unavailable");
       }
     } else {
       try {
@@ -116,7 +131,7 @@ export default function EventDetailsPage() {
         alert("Success! You've joined the event.");
         router.push("/dashboard");
       } catch (err: any) {
-        alert(err.response?.data?.message || "Could not join event");
+        alert(err.response?.data?.message || err.response?.data?.error?.message || "Could not join event");
       }
     }
   };
