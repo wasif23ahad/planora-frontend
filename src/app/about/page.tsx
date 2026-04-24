@@ -55,28 +55,70 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── PHILOSOPHY ────────────────────────────────────── */}
+      {/* ── PHILOSOPHY & FEATURES ────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
         <div className="space-y-8">
-          <h2 className="font-headline text-3xl font-semibold text-on-surface">Our Philosophy</h2>
+          <h2 className="font-headline text-3xl font-semibold text-on-surface">What is Planora?</h2>
           <p className="text-secondary leading-loose">
-            In a digital world, physical and meaningful gatherings are more important than ever. 
-            Planora provides the infrastructure for creators, organizers, and communities to 
-            connect, manage fees, and share experiences without the technical friction.
+            Planora is a premium event management ecosystem built for the modern organizer. 
+            Whether you are hosting a massive public festival or an intimate private masterclass, 
+            Planora provides the tools to manage your audience with precision.
           </p>
+          
+          <div className="space-y-6">
+            <div className="flex gap-4">
+               <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">public</span>
+               </div>
+               <div>
+                  <h4 className="font-headline font-bold text-on-surface">Global Discovery</h4>
+                  <p className="text-sm text-secondary">A marketplace for public events where anyone can discover and join community gatherings.</p>
+               </div>
+            </div>
+            
+            <div className="flex gap-4">
+               <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">lock</span>
+               </div>
+               <div>
+                  <h4 className="font-headline font-bold text-on-surface">Private Request Workflow</h4>
+                  <p className="text-sm text-secondary">Exclusive events require a 'Request to Join' message, giving hosts full control over their guest list.</p>
+               </div>
+            </div>
+
+            <div className="flex gap-4">
+               <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[20px]">payments</span>
+               </div>
+               <div>
+                  <h4 className="font-headline font-bold text-on-surface">Local Payment Integration</h4>
+                  <p className="text-sm text-secondary">Seamless BDT transactions via SSLCommerz, supporting bKash, Rocket, and local bank cards.</p>
+               </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-8 pt-4">
              <div className="space-y-2">
                 <span className="text-4xl font-headline font-bold text-primary">100%</span>
                 <p className="text-xs font-bold text-secondary uppercase tracking-widest">Community Focused</p>
              </div>
              <div className="space-y-2">
-                <span className="text-4xl font-headline font-bold text-primary">0%</span>
-                <p className="text-xs font-bold text-secondary uppercase tracking-widest">Technical Friction</p>
+                <span className="text-4xl font-headline font-bold text-primary">Secure</span>
+                <p className="text-xs font-bold text-secondary uppercase tracking-widest">End-to-End Ticketing</p>
              </div>
           </div>
         </div>
-        <div className="bg-surface-container aspect-square rounded-3xl overflow-hidden relative ambient-shadow border border-outline-variant/30 flex items-center justify-center text-8xl opacity-10">
-           <span className="material-symbols-outlined text-[120px]">groups</span>
+        <div className="bg-surface-container aspect-square rounded-3xl overflow-hidden relative ambient-shadow border border-outline-variant/30 flex items-center justify-center">
+           <img 
+              src="https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=2070&auto=format&fit=crop" 
+              alt="People at an event"
+              className="w-full h-full object-cover opacity-60 grayscale hover:grayscale-0 transition-all duration-700"
+           />
+           <div className="absolute inset-0 bg-linear-to-t from-surface-container to-transparent"></div>
+           <div className="absolute bottom-8 left-8 right-8">
+              <span className="text-[64px] text-primary opacity-20 material-symbols-outlined">auto_awesome</span>
+              <p className="text-on-surface font-headline font-bold text-2xl mt-4">Turning gatherings into memories.</p>
+           </div>
         </div>
       </div>
     </main>

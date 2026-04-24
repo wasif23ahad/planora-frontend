@@ -41,6 +41,16 @@ export default function Homepage() {
 
   const filtered = events.filter(filterMap[activeFilter] ?? filterMap["public-free"]);
 
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === "left" ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
+    }
+  };
+
   if (loading) return (
     <div className="flex-1 flex items-center justify-center bg-surface">
       <div className="animate-pulse flex flex-col items-center gap-4">
@@ -50,21 +60,20 @@ export default function Homepage() {
     </div>
   );
 
-  // Hero: prefer admin-featured event, fallback to nearest upcoming
+  // ... rest of logic ...
   const now = new Date();
   const futureEvents = events
     .filter(e => new Date(e.date) >= now)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
   const heroEvent = featured || futureEvents[0] || events[0];
-  
-  // Normalize fee display
   const heroFee = heroEvent?.feeCents ? heroEvent.feeCents / 100 : (heroEvent?.fee ?? 0);
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 md:py-24 space-y-32">
       
       {/* ── HERO SECTION ───────────────────────────────────── */}
+      {/* ... (keep existing hero code) ... */}
       {heroEvent && (
         <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant/20 overflow-hidden ambient-shadow">
           <div className="md:col-span-5 h-[400px] md:h-full relative overflow-hidden bg-surface-container-high">
@@ -105,16 +114,37 @@ export default function Homepage() {
       <section>
         <div className="flex justify-between items-end mb-10">
           <h2 className="font-headline text-4xl font-semibold tracking-[-0.03em] text-on-surface">Upcoming events</h2>
-          <Link href="/events" className="text-accent font-semibold hover:underline decoration-accent underline-offset-4 flex items-center gap-1 group">
-            See all <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-          </Link>
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex gap-2">
+              <button 
+                onClick={() => scroll("left")}
+                className="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container transition-colors text-secondary hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+              <button 
+                onClick={() => scroll("right")}
+                className="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container transition-colors text-secondary hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+            <Link href="/events" className="text-accent font-semibold hover:underline decoration-accent underline-offset-4 flex items-center gap-1 group">
+              See all <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+            </Link>
+          </div>
         </div>
         
         {events.length > 0 ? (
-          <div className="flex overflow-x-auto hide-scrollbar gap-6 pb-8 snap-x snap-mandatory -mx-4 px-4 md:-mx-8 md:px-8">
-            {events.map((e) => (
-              <EventCard key={e.id} event={e} variant="slider" />
-            ))}
+          <div className="relative group/slider">
+            <div 
+              ref={scrollRef}
+              className="flex overflow-x-auto hide-scrollbar gap-6 pb-8 snap-x snap-mandatory -mx-4 px-4 md:-mx-8 md:px-8"
+            >
+              {events.map((e) => (
+                <EventCard key={e.id} event={e} variant="slider" />
+              ))}
+            </div>
           </div>
         ) : (
           <div className="bg-surface-container-low/30 rounded-xl border border-dashed border-outline-variant/30 py-20 text-center text-secondary">
