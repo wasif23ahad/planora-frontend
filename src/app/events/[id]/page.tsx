@@ -28,6 +28,7 @@ export default function EventDetailsPage() {
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -139,14 +140,22 @@ export default function EventDetailsPage() {
     
     setSubmittingReview(true);
     try {
-      const { data } = await api.post(`/events/${id}/reviews`, {
-        rating: reviewRating,
-        comment: reviewText
-      });
-      setReviews([data, ...reviews]);
+      if (editingReviewId) {
+        const { data } = await api.patch(`/reviews/${editingReviewId}`, {
+          rating: reviewRating,
+          comment: reviewText
+        });
+        setReviews(reviews.map(r => r.id === editingReviewId ? data : r));
+        setEditingReviewId(null);
+      } else {
+        const { data } = await api.post(`/events/${id}/reviews`, {
+          rating: reviewRating,
+          comment: reviewText
+        });
+        setReviews([data, ...reviews]);
+      }
       setReviewText("");
       setReviewRating(5);
-      // Re-fetch event to update average rating
       const { data: eventData } = await api.get(`/events/${id}`);
       setEvent(eventData);
     } catch (err: any) {
@@ -154,6 +163,27 @@ export default function EventDetailsPage() {
     } finally {
       setSubmittingReview(false);
     }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm("Are you sure you want to delete this review?")) return;
+    try {
+      await api.delete(`/reviews/${reviewId}`);
+      setReviews(reviews.filter(r => r.id !== reviewId));
+      // Update event rating
+      const { data: eventData } = await api.get(`/events/${id}`);
+      setEvent(eventData);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to delete review");
+    }
+  };
+
+  const startEditing = (review: any) => {
+    setEditingReviewId(review.id);
+    setReviewText(review.comment);
+    setReviewRating(review.rating);
+    // Scroll to form
+    window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
   const submitRequest = async () => {
@@ -295,8 +325,24 @@ export default function EventDetailsPage() {
                      {/* Write Review Form */}
                      {participation?.status === 'APPROVED' && (
                         <div className="p-8 bg-primary/5 border border-primary/10 rounded-2xl animate-fade-in mb-8">
-                           <h4 className="font-headline font-bold text-on-surface mb-2">Write a Review</h4>
-                           <p className="text-xs text-secondary mb-6 uppercase tracking-widest font-bold">Share your experience with the community</p>
+                           <div className="flex justify-between items-start mb-6">
+                              <div>
+                                 <h4 className="font-headline font-bold text-on-surface mb-2">
+                                    {editingReviewId ? "Edit Your Review" : "Write a Review"}
+                                 </h4>
+                                 <p className="text-xs text-secondary uppercase tracking-widest font-bold">
+                                    {editingReviewId ? "Update your experience" : "Share your experience with the community"}
+                                 </p>
+                              </div>
+                              {editingReviewId && (
+                                 <button 
+                                    onClick={() => { setEditingReviewId(null); setReviewText(""); setReviewRating(5); }}
+                                    className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
+                                 >
+                                    Cancel Editing
+                                 </button>
+                              )}
+                           </div>
                            
                            <form onSubmit={handleReviewSubmit} className="space-y-6">
                               <div className="flex items-center gap-4 bg-surface px-4 py-2 rounded-lg w-fit border border-outline-variant/20">
@@ -330,7 +376,7 @@ export default function EventDetailsPage() {
                                  disabled={submittingReview}
                                  icon={submittingReview ? undefined : "send"}
                               >
-                                 {submittingReview ? "Posting..." : "Post Review"}
+                                 {submittingReview ? (editingReviewId ? "Updating..." : "Posting...") : (editingReviewId ? "Update Review" : "Post Review")}
                               </Button>
                            </form>
                         </div>
@@ -350,10 +396,31 @@ export default function EventDetailsPage() {
                                           <p className="font-headline font-semibold text-on-surface text-sm">{review.user?.name}</p>
                                           <p className="text-[10px] text-secondary uppercase tracking-wider">
                                              {new Date(review.createdAt).toLocaleDateString()}
+                                             {review.updatedAt !== review.createdAt && " (edited)"}
                                           </p>
                                        </div>
                                     </div>
-                                    <StarRating rating={review.rating} />
+                                    <div className="flex flex-col items-end gap-2">
+                                       <StarRating rating={review.rating} />
+                                       {user && review.userId === user.id && (
+                                          <div className="flex gap-4">
+                                             <button 
+                                                onClick={() => startEditing(review)}
+                                                className="text-[10px] font-bold text-secondary hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-widest"
+                                             >
+                                                <span className="material-symbols-outlined text-[14px]">edit</span>
+                                                Edit
+                                             </button>
+                                             <button 
+                                                onClick={() => handleDeleteReview(review.id)}
+                                                className="text-[10px] font-bold text-secondary hover:text-error transition-colors flex items-center gap-1 uppercase tracking-widest"
+                                             >
+                                                <span className="material-symbols-outlined text-[14px]">delete</span>
+                                                Delete
+                                             </button>
+                                          </div>
+                                       )}
+                                    </div>
                                  </div>
                                  <p className="text-secondary text-sm leading-relaxed italic">"{review.comment}"</p>
                               </div>
