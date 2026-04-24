@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import api from "@/lib/api";
+import api from "../../../lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
@@ -24,6 +24,9 @@ export default function InvitationsPage() {
       // First, accept the invitation in the backend
       await api.patch(`/invitations/${id}`, { status: "ACCEPTED" });
       
+      // Update local state immediately so UI shows "ACCEPTED"
+      setInvitations(prev => prev.map(inv => inv.id === id ? { ...inv, status: "ACCEPTED" } : inv));
+      
       if (isPaid) {
         // If user profile is incomplete, redirect to checkout info page
         if (!user?.phoneNumber || !user?.name) {
@@ -38,7 +41,6 @@ export default function InvitationsPage() {
         window.location.href = data.url;
       } else {
         alert("Success! You've joined the event.");
-        setInvitations(prev => prev.filter(inv => inv.id !== id));
       }
     } catch (err: any) {
       alert(err.response?.data?.error?.message || err.response?.data?.message || "Action failed");
@@ -48,7 +50,7 @@ export default function InvitationsPage() {
   const handleDecline = async (id: string) => {
     try {
       await api.patch(`/invitations/${id}`, { status: "DECLINED" });
-      setInvitations(prev => prev.filter(inv => inv.id !== id));
+      setInvitations(prev => prev.map(inv => inv.id === id ? { ...inv, status: "DECLINED" } : inv));
     } catch (err: any) {
       alert(err.response?.data?.message || "Failed to decline invitation");
     }
@@ -92,22 +94,34 @@ export default function InvitationsPage() {
                 </div>
                 
                 <div className="flex gap-3 w-full sm:w-auto">
-                    <Button 
-                      variant={isPaid ? "primary" : "secondary"}
-                      size="sm" 
-                      onClick={() => handleAccept(inv.id, isPaid, inv.event?.id)}
-                      className="flex-1 sm:flex-none"
-                    >
-                      {isPaid ? `Pay & Accept (\u09f3${feeDisplay.toLocaleString()})` : "Accept"}
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDecline(inv.id)}
-                      className="border border-outline-variant/20"
-                    >
-                      Decline
-                    </Button>
+                  {inv.status === 'PENDING' ? (
+                    <>
+                      <Button 
+                        variant={isPaid ? "primary" : "secondary"}
+                        size="sm" 
+                        onClick={() => handleAccept(inv.id, isPaid, inv.event?.id)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        {isPaid ? `Pay & Accept (\u09f3${feeDisplay.toLocaleString()})` : "Accept"}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleDecline(inv.id)}
+                        className="border border-outline-variant/20"
+                      >
+                        Decline
+                      </Button>
+                    </>
+                  ) : (
+                    <span className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest ${
+                      inv.status === 'ACCEPTED' 
+                        ? 'bg-success/10 text-success border border-success/20' 
+                        : 'bg-error/10 text-error border border-error/20'
+                    }`}>
+                      {inv.status}
+                    </span>
+                  )}
                 </div>
               </div>
             );

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const navItems = [
   { label: "My Events", href: "/dashboard", icon: "event" },
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const stats = useNotifications();
 
   const handleLogout = () => {
     logout();
@@ -35,21 +37,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                : pathname.startsWith(item.href);
 
              return (
-               <Link
-                 key={item.href}
-                 href={item.href}
-                 className={`flex items-center gap-3 px-4 py-3 border-l-4 rounded-r-lg font-body transition-colors
-                   ${isActive
-                     ? "border-primary bg-surface-container-low text-on-surface font-medium"
-                     : "border-transparent text-secondary hover:bg-surface-container-low hover:text-on-surface"
-                   }`}
-               >
-                 <span className={`material-symbols-outlined ${isActive ? 'text-primary' : ''}`} 
-                       style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>
-                    {item.icon}
-                 </span>
-                 <span>{item.label}</span>
-               </Link>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center justify-between px-4 py-3 border-l-4 rounded-r-lg font-body transition-colors
+                    ${isActive
+                      ? "border-primary bg-surface-container-low text-on-surface font-medium"
+                      : "border-transparent text-secondary hover:bg-surface-container-low hover:text-on-surface"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`material-symbols-outlined ${isActive ? 'text-primary' : ''}`} 
+                          style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                       {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                  {item.label === "Invitations" && stats?.pendingInvitationsCount > 0 && (
+                    <span className="w-5 h-5 bg-error text-on-error text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {stats.pendingInvitationsCount}
+                    </span>
+                  )}
+                </Link>
              );
           })}
 
