@@ -133,6 +133,29 @@ export default function EventDetailsPage() {
     }
   };
 
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewText.trim()) return;
+    
+    setSubmittingReview(true);
+    try {
+      const { data } = await api.post(`/events/${id}/reviews`, {
+        rating: reviewRating,
+        comment: reviewText
+      });
+      setReviews([data, ...reviews]);
+      setReviewText("");
+      setReviewRating(5);
+      // Re-fetch event to update average rating
+      const { data: eventData } = await api.get(`/events/${id}`);
+      setEvent(eventData);
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const submitRequest = async () => {
     if (!requestMessage.trim()) {
       alert("Please provide a reason for joining.");
@@ -259,7 +282,7 @@ export default function EventDetailsPage() {
                ) : (
                   <div className="space-y-8 max-w-2xl">
                      {/* Review Summary */}
-                     <div className="p-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-center gap-8 ambient-shadow">
+                     <div className="p-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-center gap-8 ambient-shadow mb-8">
                         <div className="text-5xl font-headline font-bold text-on-surface tabular-nums leading-none">
                            {event._count?.reviews > 0 ? (event.avgRating || 0).toFixed(1) : "—"}
                         </div>
@@ -269,10 +292,78 @@ export default function EventDetailsPage() {
                         </div>
                      </div>
 
-                     {/* Reviews List Placeholder */}
-                     <div className="py-20 text-center space-y-4">
-                        <span className="material-symbols-outlined text-[48px] text-secondary/30">rate_review</span>
-                        <p className="text-secondary text-sm">No detailed reviews have been left for this event yet.</p>
+                     {/* Write Review Form */}
+                     {participation?.status === 'APPROVED' && (
+                        <div className="p-8 bg-primary/5 border border-primary/10 rounded-2xl animate-fade-in mb-8">
+                           <h4 className="font-headline font-bold text-on-surface mb-2">Write a Review</h4>
+                           <p className="text-xs text-secondary mb-6 uppercase tracking-widest font-bold">Share your experience with the community</p>
+                           
+                           <form onSubmit={handleReviewSubmit} className="space-y-6">
+                              <div className="flex items-center gap-4 bg-surface px-4 py-2 rounded-lg w-fit border border-outline-variant/20">
+                                 <span className="text-xs font-bold text-secondary">Rating:</span>
+                                 <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                       <button
+                                          key={star}
+                                          type="button"
+                                          onClick={() => setReviewRating(star)}
+                                          className={`material-symbols-outlined text-2xl transition-all ${star <= reviewRating ? 'text-yellow-500 fill-1' : 'text-secondary/30'}`}
+                                          style={{ fontVariationSettings: star <= reviewRating ? "'FILL' 1" : "'FILL' 0" }}
+                                       >
+                                          star
+                                       </button>
+                                    ))}
+                                 </div>
+                              </div>
+                              
+                              <textarea
+                                 value={reviewText}
+                                 onChange={(e) => setReviewText(e.target.value)}
+                                 placeholder="Tell others what you thought about this event..."
+                                 className="w-full bg-surface border border-outline-variant/30 rounded-xl p-4 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[120px] resize-none"
+                                 required
+                              />
+                              
+                              <Button 
+                                 type="submit" 
+                                 variant="primary" 
+                                 disabled={submittingReview}
+                                 icon={submittingReview ? undefined : "send"}
+                              >
+                                 {submittingReview ? "Posting..." : "Post Review"}
+                              </Button>
+                           </form>
+                        </div>
+                     )}
+
+                     {/* Reviews List */}
+                     <div className="space-y-6">
+                        {reviews.length > 0 ? (
+                           reviews.map((review) => (
+                              <div key={review.id} className="p-6 bg-surface-container-lowest border border-outline-variant/10 rounded-2xl animate-fade-in">
+                                 <div className="flex justify-between items-start mb-4">
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">
+                                          {review.user?.name?.[0] || 'U'}
+                                       </div>
+                                       <div>
+                                          <p className="font-headline font-semibold text-on-surface text-sm">{review.user?.name}</p>
+                                          <p className="text-[10px] text-secondary uppercase tracking-wider">
+                                             {new Date(review.createdAt).toLocaleDateString()}
+                                          </p>
+                                       </div>
+                                    </div>
+                                    <StarRating rating={review.rating} />
+                                 </div>
+                                 <p className="text-secondary text-sm leading-relaxed italic">"{review.comment}"</p>
+                              </div>
+                           ))
+                        ) : (
+                           <div className="py-20 text-center space-y-4">
+                              <span className="material-symbols-outlined text-[48px] text-secondary/30">rate_review</span>
+                              <p className="text-secondary text-sm">No detailed reviews have been left for this event yet.</p>
+                           </div>
+                        )}
                      </div>
                   </div>
                )}
