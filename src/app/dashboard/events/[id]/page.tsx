@@ -19,6 +19,14 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [activeTab, setActiveTab] = useState("participants");
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  useEffect(() => {
+    if (statusMessage) {
+      const timer = setTimeout(() => setStatusMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
 
   useEffect(() => {
     const fetchManagementData = async () => {
@@ -42,15 +50,14 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
     try {
       const { data } = await api.patch(`/events/${id}/participants/${userId}`, { status });
       if (data.message && data.message.includes('invitation sent')) {
-        // If it was a private event approval, the participation was deleted and an invitation sent.
-        // Remove from the participants list.
         setParticipants(prev => prev.filter(p => p.userId !== userId));
-        alert("Invitation sent to user!");
+        setStatusMessage({ type: 'success', text: "Invitation sent successfully!" });
       } else {
         setParticipants(prev => prev.map(p => p.userId === userId ? { ...p, status } : p));
+        setStatusMessage({ type: 'success', text: `Status updated to ${status}` });
       }
     } catch (error) {
-       alert("Failed to update participant status.");
+       setStatusMessage({ type: 'error', text: "Failed to update participant status." });
     }
   };
 
@@ -60,10 +67,10 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
     setInviting(true);
     try {
       await api.post(`/events/${id}/invite`, { email: inviteEmail });
-      alert("Invitation sent successfully!");
+      setStatusMessage({ type: 'success', text: "Invitation sent successfully!" });
       setInviteEmail("");
     } catch (error: any) {
-      alert(error.response?.data?.message || "Internal invitation failure.");
+      setStatusMessage({ type: 'error', text: error.response?.data?.message || "Invitation failed." });
     } finally {
       setInviting(false);
     }
@@ -154,6 +161,20 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
           ))}
         </nav>
       </div>
+
+      {/* Status Messages */}
+      {statusMessage && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 animate-fade-in border shadow-sm ${
+          statusMessage.type === 'success' 
+            ? 'bg-success/5 border-success/20 text-success' 
+            : 'bg-error/5 border-error/20 text-error'
+        }`}>
+          <span className="material-symbols-outlined text-[20px]">
+            {statusMessage.type === 'success' ? 'check_circle' : 'error'}
+          </span>
+          <span className="text-sm font-medium">{statusMessage.text}</span>
+        </div>
+      )}
 
       {/* Content Area */}
       <section className="animate-fade-in">
