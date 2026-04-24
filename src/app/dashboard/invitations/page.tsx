@@ -84,7 +84,7 @@ export default function InvitationsPage() {
                   </h3>
                   <div className="flex items-center gap-2 text-secondary text-xs font-medium">
                     <span className="material-symbols-outlined text-[16px]">person</span>
-                    <span>Invite from {inv.inviter?.name}</span>
+                    <span>Invite from {inv.sender?.name}</span>
                     <span className="opacity-30">·</span>
                     <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                     <span>{inv.event?.date ? new Date(inv.event.date).toLocaleDateString() : "TBA"}</span>
