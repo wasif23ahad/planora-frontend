@@ -20,28 +20,28 @@ export default function InvitationsPage() {
   }, []);
 
   const handleAccept = async (id: string, isPaid: boolean, eventId: string) => {
-    if (isPaid) {
-      // If user profile is incomplete, redirect to checkout info page
-      if (!user?.phoneNumber || !user?.name) {
-        router.push(`/events/${eventId}/checkout`);
-        return;
-      }
-      try {
+    try {
+      // First, accept the invitation in the backend
+      await api.patch(`/invitations/${id}`, { status: "ACCEPTED" });
+      
+      if (isPaid) {
+        // If user profile is incomplete, redirect to checkout info page
+        if (!user?.phoneNumber || !user?.name) {
+          router.push(`/events/${eventId}/checkout`);
+          return;
+        }
+        
         const { data } = await api.post("/payments/checkout", { 
           eventId, 
           phoneNumber: user.phoneNumber 
         });
         window.location.href = data.url;
-      } catch (err: any) {
-        alert(err.response?.data?.error?.message || err.response?.data?.message || "Payment service unavailable");
-      }
-    } else {
-      try {
-        await api.patch(`/invitations/${id}`, { status: "ACCEPTED" });
+      } else {
+        alert("Success! You've joined the event.");
         setInvitations(prev => prev.filter(inv => inv.id !== id));
-      } catch (err: any) {
-        alert(err.response?.data?.error?.message || err.response?.data?.message || "Failed to accept invitation");
       }
+    } catch (err: any) {
+      alert(err.response?.data?.error?.message || err.response?.data?.message || "Action failed");
     }
   };
 

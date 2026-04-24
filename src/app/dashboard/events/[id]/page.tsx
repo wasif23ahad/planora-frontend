@@ -39,26 +39,17 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
 
   const handleUpdateStatus = async (userId: string, status: string) => {
     try {
-      await api.patch(`/events/${id}/participants/${userId}`, { status });
-      setParticipants(prev => prev.map(p => p.userId === userId ? { ...p, status } : p));
+      const { data } = await api.patch(`/events/${id}/participants/${userId}`, { status });
+      if (data.message && data.message.includes('invitation sent')) {
+        // If it was a private event approval, the participation was deleted and an invitation sent.
+        // Remove from the participants list.
+        setParticipants(prev => prev.filter(p => p.userId !== userId));
+        alert("Invitation sent to user!");
+      } else {
+        setParticipants(prev => prev.map(p => p.userId === userId ? { ...p, status } : p));
+      }
     } catch (error) {
        alert("Failed to update participant status.");
-    }
-  };
-
-  const handleApproveRequest = async (userId: string, email: string) => {
-    if (event?.visibility === "PRIVATE") {
-      try {
-        await api.post(`/events/${id}/invite`, { email });
-        // Since it's an invite, let's remove them from the pending participants list or mark them as invited.
-        // The easiest is to just reject/remove the PENDING participation so it doesn't clutter,
-        // OR we can just leave it PENDING until they accept. Let's leave it PENDING but alert success.
-        alert(`Invitation sent to ${email}! They must accept it from their dashboard.`);
-      } catch (error: any) {
-        alert(error.response?.data?.message || "Failed to send invitation.");
-      }
-    } else {
-      handleUpdateStatus(userId, "APPROVED");
     }
   };
 
@@ -213,10 +204,10 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
                                 {p.status === "PENDING" && (
                                    <>
                                       <button 
-                                        onClick={() => handleApproveRequest(p.userId, p.user.email)}
+                                        onClick={() => handleUpdateStatus(p.userId, "APPROVED")}
                                         className="text-primary hover:opacity-80 transition-opacity font-medium text-xs border border-primary/20 rounded px-2 py-1"
                                       >
-                                        {event?.visibility === "PRIVATE" ? "Send Invite" : "Approve"}
+                                        Approve
                                       </button>
                                       <button 
                                         onClick={() => handleUpdateStatus(p.userId, "REJECTED")}

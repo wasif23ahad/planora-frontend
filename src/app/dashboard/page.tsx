@@ -6,13 +6,31 @@ import api from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/Pill";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [ownedEvents, setOwnedEvents] = useState<any[]>([]);
   const [joinedEvents, setJoinedEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"hosting" | "attending">("attending");
-  const router = useRouter();
+
+  const handlePay = async (eventId: string) => {
+    if (!user?.phoneNumber || !user?.name) {
+      router.push(`/events/${eventId}/checkout`);
+      return;
+    }
+    try {
+      const { data } = await api.post("/payments/checkout", { 
+        eventId, 
+        phoneNumber: user.phoneNumber 
+      });
+      window.location.href = data.url;
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Payment service unavailable");
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -179,6 +197,13 @@ export default function DashboardPage() {
                               View Ticket
                             </button>
                           </Link>
+                        ) : p.event.visibility === 'PRIVATE' && (p.event.feeCents > 0 || (p.event.fee || 0) > 0) && p.invitationStatus === 'ACCEPTED' ? (
+                          <button 
+                            onClick={() => handlePay(p.eventId)}
+                            className="bg-primary text-on-primary px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:opacity-90 transition-opacity"
+                          >
+                            Pay & Join
+                          </button>
                         ) : (
                           <span className="text-secondary text-xs uppercase tracking-wider">
                             Pending
