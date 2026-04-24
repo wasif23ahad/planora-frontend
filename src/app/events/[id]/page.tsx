@@ -22,6 +22,7 @@ export default function EventDetailsPage() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewText, setReviewText] = useState("");
@@ -144,12 +145,13 @@ export default function EventDetailsPage() {
         phoneNumber: user?.phoneNumber,
         message: requestMessage
       });
-      alert("Request sent! The host will review your request.");
-      setShowRequestModal(false);
-      router.push("/dashboard");
+      setRequestSubmitted(true);
+      setTimeout(() => {
+        setShowRequestModal(false);
+        router.push("/dashboard");
+      }, 1500);
     } catch (err: any) {
       alert(err.response?.data?.message || "Request failed");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -383,36 +385,48 @@ export default function EventDetailsPage() {
       {showRequestModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface w-full max-w-md rounded-3xl p-8 shadow-2xl border border-outline-variant/20 animate-scale-in">
-            <h3 className="font-headline text-2xl font-bold text-on-surface mb-2">Request to Join</h3>
-            <p className="text-secondary text-sm mb-6">This is a private event. Please tell the host why you'd like to attend.</p>
-            
-            <div className="space-y-4">
-              <textarea
-                className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[120px] resize-none"
-                placeholder="Ex: I'm a fellow developer and I'd love to learn from this masterclass..."
-                value={requestMessage}
-                onChange={(e) => setRequestMessage(e.target.value)}
-              />
-              
-              <div className="flex gap-3 pt-2">
-                <Button 
-                  variant="ghost" 
-                  className="flex-1" 
-                  onClick={() => setShowRequestModal(false)}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  variant="primary" 
-                  className="flex-1" 
-                  onClick={submitRequest}
-                  disabled={submitting}
-                >
-                  {submitting ? "Submitting..." : "Submit Request"}
-                </Button>
+            {requestSubmitted ? (
+              <div className="py-12 text-center animate-fade-in">
+                <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="material-symbols-outlined text-4xl">check_circle</span>
+                </div>
+                <h3 className="font-headline text-2xl font-bold text-on-surface mb-2">Request Submitted!</h3>
+                <p className="text-secondary text-sm">The host will review your request. Redirecting you to your dashboard...</p>
               </div>
-            </div>
+            ) : (
+              <>
+                <h3 className="font-headline text-2xl font-bold text-on-surface mb-2">Request to Join</h3>
+                <p className="text-secondary text-sm mb-6">This is a private event. Please tell the host why you'd like to attend.</p>
+                
+                <div className="space-y-4">
+                  <textarea
+                    className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[120px] resize-none"
+                    placeholder="Ex: I'm a fellow developer and I'd love to learn from this masterclass..."
+                    value={requestMessage}
+                    onChange={(e) => setRequestMessage(e.target.value)}
+                  />
+                  
+                  <div className="flex gap-3 pt-2">
+                    <Button 
+                      variant="ghost" 
+                      className="flex-1" 
+                      onClick={() => setShowRequestModal(false)}
+                      disabled={submitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="primary" 
+                      className="flex-1" 
+                      onClick={submitRequest}
+                      disabled={submitting}
+                    >
+                      {submitting ? "Submitting..." : "Submit Request"}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
