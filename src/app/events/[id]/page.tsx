@@ -250,11 +250,17 @@ export default function EventDetailsPage() {
                
                {participation ? (
                  <div className="space-y-6">
-                   <div className="flex items-center gap-3 text-success">
-                     <span className="material-symbols-outlined text-3xl">check_circle</span>
+                   <div className={`flex items-center gap-3 ${participation.status === 'PENDING' ? 'text-primary' : 'text-success'}`}>
+                     <span className="material-symbols-outlined text-3xl">
+                       {participation.status === 'PENDING' ? 'pending_actions' : 'check_circle'}
+                     </span>
                      <div>
-                       <p className="font-headline font-bold text-lg leading-tight">You're Registered!</p>
-                       <p className="text-xs text-secondary">Your spot is secured.</p>
+                       <p className="font-headline font-bold text-lg leading-tight">
+                         {participation.status === 'PENDING' ? "Request Pending" : "You're Registered!"}
+                       </p>
+                       <p className="text-xs text-secondary">
+                         {participation.status === 'PENDING' ? "Waiting for host approval." : "Your spot is secured."}
+                       </p>
                      </div>
                    </div>
                    <Button 
@@ -266,9 +272,11 @@ export default function EventDetailsPage() {
                    >
                      Go to Dashboard
                    </Button>
-                   <p className="text-xs text-center text-secondary">
-                     View your <Link href={`/dashboard/tickets/${participation.id}`} className="text-primary hover:underline font-bold">E-Ticket</Link>
-                   </p>
+                   {participation.status !== 'PENDING' && (
+                     <p className="text-xs text-center text-secondary">
+                       View your <Link href={`/dashboard/tickets/${participation.id}`} className="text-primary hover:underline font-bold">E-Ticket</Link>
+                     </p>
+                   )}
                  </div>
                ) : (
                  <>

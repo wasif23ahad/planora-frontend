@@ -173,11 +173,17 @@ export default function DashboardPage() {
                         <StatusPill status={p.status} />
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <Link href={`/dashboard/tickets/${p.id}`}>
-                          <button className="text-primary hover:underline font-semibold text-xs uppercase tracking-wider">
-                            View Ticket
-                          </button>
-                        </Link>
+                        {p.status === 'APPROVED' ? (
+                          <Link href={`/dashboard/tickets/${p.id}`}>
+                            <button className="text-primary hover:underline font-semibold text-xs uppercase tracking-wider">
+                              View Ticket
+                            </button>
+                          </Link>
+                        ) : (
+                          <span className="text-secondary text-xs uppercase tracking-wider">
+                            Pending
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))

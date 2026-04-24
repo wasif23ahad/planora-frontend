@@ -40,6 +40,15 @@ export default function TicketPage() {
     </div>
   );
 
+  if (participation.status === "PENDING") return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-surface">
+       <span className="material-symbols-outlined text-[64px] text-primary opacity-50 mb-4">pending_actions</span>
+       <h2 className="text-2xl font-headline font-bold text-on-surface">Ticket Pending Approval</h2>
+       <p className="text-secondary mt-2 mb-8">The host has not yet approved your request to join.</p>
+       <Button onClick={() => router.push("/dashboard")}>Back to Dashboard</Button>
+    </div>
+  );
+
   const event = participation.event;
   const user = participation.user;
   const payment = participation.payment;
