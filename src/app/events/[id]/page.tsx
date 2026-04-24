@@ -85,7 +85,7 @@ export default function EventDetailsPage() {
   const handleAction = async () => {
     if (!user) { router.push("/login"); return; }
     
-    if (participation) {
+    if (participation && participation.status !== 'REJECTED') {
       alert("You have already joined this event. Redirecting to your dashboard...");
       router.push("/dashboard");
       return;
@@ -283,7 +283,7 @@ export default function EventDetailsPage() {
           <div className="lg:sticky lg:top-28 space-y-6">
             <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-8 shadow-xl ambient-shadow">
                
-               {participation ? (
+               {participation && participation.status !== 'REJECTED' ? (
                  <div className="space-y-6">
                    <div className={`flex items-center gap-3 ${participation.status === 'PENDING' ? 'text-primary' : 'text-success'}`}>
                      <span className="material-symbols-outlined text-3xl">
@@ -315,6 +315,15 @@ export default function EventDetailsPage() {
                  </div>
                ) : (
                  <>
+                   {participation?.status === 'REJECTED' && (
+                     <div className="mb-6 p-4 bg-error/5 border border-error/20 rounded-2xl flex items-start gap-3 animate-fade-in">
+                       <span className="material-symbols-outlined text-error text-[20px]">block</span>
+                       <div>
+                         <p className="text-sm font-bold text-error">Request Rejected</p>
+                         <p className="text-[11px] text-secondary mt-1 leading-relaxed">The host has declined your request. You can update your message and try applying again.</p>
+                       </div>
+                     </div>
+                   )}
                    <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-2">Registration Fee</p>
                    <div className="text-4xl font-headline font-bold text-on-surface mb-6 tabular-nums">
                       {displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}
