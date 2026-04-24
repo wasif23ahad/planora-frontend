@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
-  const stats = useNotifications();
+  const { stats } = useNotifications();
 
   const handleLogout = () => {
     logout();
