@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/Pill";
 import { Input } from "@/components/ui/Input";
-import api from "@/lib/api";
+import planoraApi from "../../../../lib/api";
+const api = planoraApi;
 
 export default function EventManagementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -140,9 +141,14 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
             >
               {t.label}
               {t.key === 'participants' && (
-                 <span className="ml-2 text-[10px] bg-surface-container px-1.5 py-0.5 rounded font-bold opacity-60">
-                   {participants.length}
-                 </span>
+                <>
+                  <span className="ml-2 text-[10px] bg-surface-container px-1.5 py-0.5 rounded font-bold opacity-60">
+                    {participants.length}
+                  </span>
+                  {participants.some(p => p.status === 'PENDING') && (
+                    <span className="ml-1 w-2 h-2 bg-error rounded-full inline-block"></span>
+                  )}
+                </>
               )}
             </button>
           ))}
@@ -187,18 +193,23 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
                     </thead>
                     <tbody className="divide-y divide-surface-container-high/50 bg-surface-container-lowest">
                       {participants.length > 0 ? (
-                        participants.map((p) => (
-                          <tr key={p.userId} className="hover:bg-surface-container-low/30 transition-colors group">
-                            <td className="px-6 py-4">
-                               <div className="font-medium text-on-surface">{p.user.name}</div>
-                               <div className="text-secondary text-xs">{p.user.email}</div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <StatusPill status={p.status} />
-                            </td>
-                            <td className="px-6 py-4 text-secondary">
-                               {new Date(p.joinedAt || Date.now()).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </td>
+                         participants.map((p) => (
+                           <tr key={p.userId} className="hover:bg-surface-container-low/30 transition-colors group">
+                             <td className="px-6 py-4">
+                                <div className="font-medium text-on-surface">{p.user.name}</div>
+                                <div className="text-secondary text-xs">{p.user.email}</div>
+                                {p.message && (
+                                  <div className="mt-2 p-3 bg-surface-container-low rounded-xl text-xs italic text-secondary max-w-sm whitespace-normal border border-outline-variant/10 shadow-sm">
+                                    " {p.message} "
+                                  </div>
+                                )}
+                             </td>
+                             <td className="px-6 py-4 text-center">
+                               <StatusPill status={p.status} />
+                             </td>
+                             <td className="px-6 py-4 text-secondary">
+                                {new Date(p.joinedAt || Date.now()).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                             </td>
                             <td className="px-6 py-4 text-right">
                               <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                                 {p.status === "PENDING" && (

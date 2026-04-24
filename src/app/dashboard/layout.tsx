@@ -58,6 +58,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {stats.pendingInvitationsCount}
                     </span>
                   )}
+                  {item.label === "My Events" && stats?.pendingRequestsCount > 0 && (
+                    <span className="w-5 h-5 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {stats.pendingRequestsCount}
+                    </span>
+                  )}
                 </Link>
              );
           })}

@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import api from "@/lib/api";
+import planoraApi from "../../../lib/api";
+const api = planoraApi;
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill, StatusPill } from "@/components/ui/Pill";
@@ -18,6 +19,9 @@ export default function EventDetailsPage() {
   const [participation, setParticipation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"details" | "reviews">("details");
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestMessage, setRequestMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewText, setReviewText] = useState("");
@@ -101,16 +105,11 @@ export default function EventDetailsPage() {
     const isPrivate = event.visibility === "PRIVATE";
 
     if (isPrivate) {
-      try {
-        await api.post(`/events/${event.id}/join`, { 
-          phoneNumber: user.phoneNumber 
-        });
-        alert("Request sent! The host will review your request.");
-        router.push("/dashboard");
-      } catch (err: any) {
-        alert(err.response?.data?.message || "Could not send request");
-      }
-    } else if (isPaid) {
+      setShowRequestModal(true);
+      return;
+    }
+
+    if (isPaid) {
       try {
         const { data } = await api.post("/payments/checkout", { 
           eventId: event.id, 
@@ -130,6 +129,28 @@ export default function EventDetailsPage() {
       } catch (err: any) {
         alert(err.response?.data?.message || "Could not join event");
       }
+    }
+  };
+
+  const submitRequest = async () => {
+    if (!requestMessage.trim()) {
+      alert("Please provide a reason for joining.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.post(`/events/${event.id}/join`, { 
+        phoneNumber: user?.phoneNumber,
+        message: requestMessage
+      });
+      alert("Request sent! The host will review your request.");
+      setShowRequestModal(false);
+      router.push("/dashboard");
+    } catch (err: any) {
+      alert(err.response?.data?.message || "Request failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -357,6 +378,44 @@ export default function EventDetailsPage() {
 
         </div>
       </div>
+
+      {/* Join Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface w-full max-w-md rounded-3xl p-8 shadow-2xl border border-outline-variant/20 animate-scale-in">
+            <h3 className="font-headline text-2xl font-bold text-on-surface mb-2">Request to Join</h3>
+            <p className="text-secondary text-sm mb-6">This is a private event. Please tell the host why you'd like to attend.</p>
+            
+            <div className="space-y-4">
+              <textarea
+                className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[120px] resize-none"
+                placeholder="Ex: I'm a fellow developer and I'd love to learn from this masterclass..."
+                value={requestMessage}
+                onChange={(e) => setRequestMessage(e.target.value)}
+              />
+              
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="ghost" 
+                  className="flex-1" 
+                  onClick={() => setShowRequestModal(false)}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="primary" 
+                  className="flex-1" 
+                  onClick={submitRequest}
+                  disabled={submitting}
+                >
+                  {submitting ? "Submitting..." : "Submit Request"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
