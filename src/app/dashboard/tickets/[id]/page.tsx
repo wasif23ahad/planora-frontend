@@ -159,21 +159,46 @@ export default function TicketPage() {
       <style jsx global>{`
         @media print {
           @page {
-            margin: 0;
-            size: auto;
+            margin: 0.5cm;
+            size: portrait;
           }
           body {
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
+            -webkit-print-color-adjust: exact;
           }
           .min-h-screen {
             min-height: 0 !important;
             height: auto !important;
             padding: 0 !important;
-            background: white !important;
+            margin: 0 !important;
           }
-          nav, footer, .print-hidden, .print\\:hidden {
+          #ticket-container {
+            position: relative !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border: none !important;
+            page-break-inside: avoid;
+          }
+          /* Shrink spacing for print */
+          #ticket-container .p-8, #ticket-container .p-12 {
+            padding: 1.5rem !important;
+          }
+          #ticket-container .space-y-12 > * + * {
+            margin-top: 1.5rem !important;
+          }
+          #ticket-container h1 { font-size: 1.5rem !important; }
+          #ticket-container h2 { font-size: 1.5rem !important; }
+          #ticket-container .text-4xl { font-size: 1.5rem !important; }
+          #ticket-container .py-12, #ticket-container .py-20 {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+          }
+          .print\\:hidden, nav, footer, .mt-12 {
             display: none !important;
           }
           body * {
@@ -181,16 +206,6 @@ export default function TicketPage() {
           }
           #ticket-container, #ticket-container * {
             visibility: visible;
-          }
-          #ticket-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 20mm !important;
-            box-shadow: none !important;
-            border: none !important;
           }
         }
       `}</style>
