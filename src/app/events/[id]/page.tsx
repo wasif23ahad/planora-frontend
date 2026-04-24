@@ -159,7 +159,8 @@ export default function EventDetailsPage() {
       const { data: eventData } = await api.get(`/events/${id}`);
       setEvent(eventData);
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to submit review");
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || "Failed to submit review";
+      alert(msg);
     } finally {
       setSubmittingReview(false);
     }
@@ -323,7 +324,7 @@ export default function EventDetailsPage() {
                      </div>
 
                      {/* Write Review Form */}
-                     {participation?.status === 'APPROVED' && (
+                     {participation?.status === 'APPROVED' && (!reviews.some(r => r.userId === user?.id) || editingReviewId) && (
                         <div className="p-8 bg-primary/5 border border-primary/10 rounded-2xl animate-fade-in mb-8">
                            <div className="flex justify-between items-start mb-6">
                               <div>
