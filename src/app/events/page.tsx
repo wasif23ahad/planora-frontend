@@ -79,6 +79,15 @@ export default function EventsPage() {
                   />
                   <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Public Events</span>
                 </label>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    checked={filters.private}
+                    onChange={(e) => setFilters({...filters, private: e.target.checked})}
+                    className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Private Events</span>
+                </label>
               </div>
             </div>
 
