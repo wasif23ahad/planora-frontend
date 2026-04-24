@@ -30,6 +30,10 @@ export default function EventDetailsPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
+  const avgRating = reviews.length > 0 
+    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
+    : 0;
+
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -285,7 +289,7 @@ export default function EventDetailsPage() {
                   className={`pb-4 font-headline font-semibold tracking-[-0.02em] whitespace-nowrap transition-all border-b-2 uppercase text-xs tracking-widest
                     ${tab === t ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
                 >
-                  {t} {t === "reviews" ? `(${event._count?.reviews || 0})` : ""}
+                  {t} {t === "reviews" ? `(${reviews.length})` : ""}
                 </button>
               ))}
             </div>
@@ -315,11 +319,11 @@ export default function EventDetailsPage() {
                      {/* Review Summary */}
                      <div className="p-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-center gap-8 ambient-shadow mb-8">
                         <div className="text-5xl font-headline font-bold text-on-surface tabular-nums leading-none">
-                           {event._count?.reviews > 0 ? (event.avgRating || 0).toFixed(1) : "—"}
+                           {reviews.length > 0 ? avgRating.toFixed(1) : "—"}
                         </div>
                         <div>
-                           <StarRating rating={event.avgRating || 0} />
-                           <p className="text-sm text-secondary mt-1 font-medium">Based on {event._count?.reviews || 0} verified reviews</p>
+                           <StarRating rating={avgRating} />
+                           <p className="text-sm text-secondary mt-1 font-medium">Based on {reviews.length} verified review{reviews.length !== 1 ? 's' : ''}</p>
                         </div>
                      </div>
 
