@@ -5,6 +5,7 @@ Planora is a modern, responsive, and robust full-stack web application designed 
 ### 🌐 Live URLs
 - **Frontend Live**: [https://planora-frontend-green.vercel.app](https://planora-frontend-green.vercel.app)
 - **Backend Live**: [https://planora-backend-sigma.vercel.app](https://planora-backend-sigma.vercel.app)
+- **Live Demo**: [https://planora-backend-sigma.vercel.app](https://www.youtube.com/watch?v=kT40fyVPrqk)
 
 ---
 
