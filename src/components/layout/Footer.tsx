@@ -5,13 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 
-const socials = [
-  { label: "Facebook",  href: "https://facebook.com/planora",  icon: "facebook" /* placeholder slot */ },
-  { label: "Twitter",   href: "https://twitter.com/planora",   icon: "alternate_email" },
-  { label: "Instagram", href: "https://instagram.com/planora", icon: "photo_camera" },
-  { label: "LinkedIn",  href: "https://linkedin.com/company/planora", icon: "work" },
-  { label: "GitHub",    href: "https://github.com/wasif23ahad/planora-frontend", icon: "code" },
-];
+const socials: any[] = [];
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -46,7 +40,6 @@ export function Footer() {
           <p className="text-secondary max-w-xs">
             Discover, create, and join events. Built for communities that gather with purpose.
           </p>
-          <p className="text-secondary text-xs">© {currentYear} Planora. All rights reserved.</p>
         </div>
 
         {/* Explore */}
@@ -110,28 +103,14 @@ export function Footer() {
             </div>
           )}
 
-          {/* Social row */}
-          <div className="flex items-center gap-2 mt-2">
-            {socials.map(s => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className="w-9 h-9 rounded-full bg-surface-container-lowest border border-outline-variant flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">{s.icon}</span>
-              </a>
-            ))}
-          </div>
+          {/* Social row removed */}
         </div>
       </div>
 
       {/* Bottom strip */}
       <div className="border-t border-outline-variant">
         <div className="max-w-[1440px] mx-auto px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-secondary">
-          <span>Made with care in Dhaka.</span>
+          <span>© {currentYear} Planora. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <Link href="/legal" className="hover:text-primary transition-colors">Privacy</Link>
             <Link href="/legal" className="hover:text-primary transition-colors">Terms</Link>
