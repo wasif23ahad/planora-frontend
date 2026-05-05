@@ -51,8 +51,8 @@ export default function BlogPage() {
         {posts.map((p) => (
           <li key={p.slug}>
             <Link
-              href="#"
-              className="group block bg-surface-container-lowest border border-outline-variant rounded-xl p-8 hover:border-primary transition-colors ambient-shadow"
+              href={`/blog/${p.slug}`}
+              className="group block bg-surface-container-lowest border border-outline-variant rounded-xl p-8 hover:border-primary transition-colors ambient-shadow h-full"
             >
               <div className="flex items-center gap-3 mb-4 text-xs">
                 <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold uppercase tracking-wider">{p.tag}</span>
