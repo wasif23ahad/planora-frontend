@@ -36,7 +36,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className="w-full md:w-64 shrink-0 flex flex-col gap-2">
         <nav className="flex flex-col gap-1 sticky top-32">
           {navItems.map((item) => {
-             // Check if active: exact match for root, or startsWith for subpages
              const isActive = item.href === "/dashboard" 
                ? pathname === "/dashboard" 
                : pathname.startsWith(item.href);
@@ -72,7 +71,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
              );
           })}
 
-          {/* Admin Panel Link */}
           {(user?.role === "ADMIN" || user?.role === "MANAGER") && (
             <Link
               href="/admin/events"
@@ -89,7 +87,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           )}
 
-          {/* Logout Action */}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 border-l-4 border-transparent text-secondary hover:bg-surface-container-low hover:text-error rounded-r-lg transition-colors mt-8 group"
