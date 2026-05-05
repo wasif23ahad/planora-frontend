@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
+import { useToast } from "@/context/ToastContext";
+
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
@@ -28,8 +30,16 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const { login } = useAuth();
+  const { user, login, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const router = useRouter();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, authLoading, router]);
 
   const {
     register,
@@ -46,10 +56,12 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", data);
       login(response.data.token, response.data.user);
+      showToast("Welcome back to Planora!", "success");
       router.push("/dashboard");
     } catch (err: any) {
       const message = err.response?.data?.message || "Login failed. Please check your credentials.";
       setError(message);
+      showToast(message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -63,9 +75,12 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", { email: d.email, password: d.password });
       login(response.data.token, response.data.user);
+      showToast(`Logged in as ${d.role}`, "success");
       router.push("/dashboard");
     } catch (err: any) {
-      setError("Demo login failed. Please ensure the backend is running and seeded.");
+      const message = "Demo login failed. Ensure the backend is running.";
+      setError(message);
+      showToast(message, "error");
       setIsLoading(false);
     }
   };
@@ -113,18 +128,28 @@ export default function LoginPage() {
           </div>
 
           {/* Demo accounts */}
-          <div className="space-y-3 pt-2">
-            <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">Demo accounts (Instant Login)</p>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-4 pt-2">
+            <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">Demo accounts</p>
+            <div className="space-y-2">
               {DEMO_ACCOUNTS.map((d) => (
-                <button
-                  key={d.email}
-                  type="button"
-                  onClick={() => handleDemoLogin(d.email)}
-                  className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg border border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary transition-colors"
-                >
-                  {d.role}
-                </button>
+                <div key={d.email} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin(d.email)}
+                    className="flex-1 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-lg border border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary transition-all duration-200 text-left flex justify-between items-center group"
+                  >
+                    <span>{d.role}</span>
+                    <span className="text-[9px] opacity-0 group-hover:opacity-100 transition-opacity">Instant Login →</span>
+                  </button>
+                  <button
+                    type="button"
+                    title="Auto-fill form"
+                    onClick={() => { setValue("email", d.email); setValue("password", d.password); }}
+                    className="w-10 h-10 rounded-lg border border-outline-variant flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">edit_note</span>
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -132,9 +157,9 @@ export default function LoginPage() {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isLoading}
+            disabled={isLoading || authLoading}
           >
-            {isLoading ? "Please wait…" : "Log In"}
+            {isLoading || authLoading ? "Please wait…" : "Log In"}
           </Button>
 
           <div className="relative my-8">

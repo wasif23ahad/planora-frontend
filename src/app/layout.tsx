@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: "A full-stack events platform for creating, discovering, and joining public or private events.",
 };
 
+import { ToastProvider } from "@/context/ToastContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -40,11 +42,13 @@ export default function RootLayout({
       <body className={`${inter.variable} ${interTight.variable} font-body bg-surface text-on-surface antialiased flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary`}>
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
-            <main className="grow animate-fade-in">
-              {children}
-            </main>
-            <Footer />
+            <ToastProvider>
+              <Navbar />
+              <main className="grow animate-fade-in">
+                {children}
+              </main>
+              <Footer />
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

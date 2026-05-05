@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/Button";
 import { CategoryPill, StatusPill } from "@/components/ui/Pill";
 import { StarRating } from "@/components/ui/StarRating";
 import { RelatedEvents } from "@/components/events/RelatedEvents";
+import { useToast } from "@/context/ToastContext";
 
 export default function EventDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { showToast } = useToast();
   
   const [event, setEvent] = useState<any>(null);
   const [participation, setParticipation] = useState<any>(null);
@@ -91,13 +93,13 @@ export default function EventDetailsPage() {
     if (!user) { router.push("/login"); return; }
     
     if (participation && participation.status !== 'REJECTED') {
-      alert("You have already joined this event. Redirecting to your dashboard...");
+      showToast("You have already joined this event.", "info");
       router.push("/dashboard");
       return;
     }
 
     if (isPast) {
-      alert("This event has already passed.");
+      showToast("This event has already passed.", "warning");
       return;
     }
 
@@ -123,17 +125,17 @@ export default function EventDetailsPage() {
         });
         window.location.href = data.url;
       } catch (err: any) {
-        alert(err.response?.data?.message || "Payment service unavailable");
+        showToast(err.response?.data?.message || "Payment service unavailable", "error");
       }
     } else {
       try {
         await api.post(`/events/${event.id}/join`, { 
           phoneNumber: user.phoneNumber 
         });
-        alert("Success! You've joined the event.");
+        showToast("Success! You've joined the event.", "success");
         router.push("/dashboard");
       } catch (err: any) {
-        alert(err.response?.data?.message || "Could not join event");
+        showToast(err.response?.data?.message || "Could not join event", "error");
       }
     }
   };
@@ -160,11 +162,12 @@ export default function EventDetailsPage() {
       }
       setReviewText("");
       setReviewRating(5);
+      showToast(editingReviewId ? "Review updated!" : "Review posted!", "success");
       const { data: eventData } = await api.get(`/events/${id}`);
       setEvent(eventData);
     } catch (err: any) {
       const msg = err.response?.data?.error?.message || err.response?.data?.message || "Failed to submit review";
-      alert(msg);
+      showToast(msg, "error");
     } finally {
       setSubmittingReview(false);
     }
@@ -175,11 +178,12 @@ export default function EventDetailsPage() {
     try {
       await api.delete(`/reviews/${reviewId}`);
       setReviews(reviews.filter(r => r.id !== reviewId));
+      showToast("Review deleted.", "info");
       // Update event rating
       const { data: eventData } = await api.get(`/events/${id}`);
       setEvent(eventData);
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to delete review");
+      showToast(err.response?.data?.message || "Failed to delete review", "error");
     }
   };
 
@@ -204,12 +208,13 @@ export default function EventDetailsPage() {
         message: requestMessage
       });
       setRequestSubmitted(true);
+      showToast("Join request sent!", "success");
       setTimeout(() => {
         setShowRequestModal(false);
         router.push("/dashboard");
       }, 1500);
     } catch (err: any) {
-      alert(err.response?.data?.message || "Request failed");
+      showToast(err.response?.data?.message || "Request failed", "error");
       setSubmitting(false);
     }
   };
