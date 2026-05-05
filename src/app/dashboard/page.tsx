@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import planoraApi from "../../lib/api";
 const api = planoraApi;
@@ -8,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/Pill";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,6 +15,21 @@ export default function DashboardPage() {
   const [joinedEvents, setJoinedEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"hosting" | "attending">("attending");
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    const upcomingHosting = ownedEvents.filter(e => new Date(e.date) >= now).length;
+    const totalParticipants = ownedEvents.reduce((sum, e) => sum + (e._count?.participations ?? 0), 0);
+    const approvedJoins = joinedEvents.filter((p: any) => p.status === "APPROVED").length;
+    const pendingJoins = joinedEvents.filter((p: any) => p.status === "PENDING").length;
+    return { upcomingHosting, totalParticipants, approvedJoins, pendingJoins };
+  }, [ownedEvents, joinedEvents]);
+
+  const pieData = useMemo(() => [
+    { name: "Approved", value: joinedEvents.filter((p: any) => p.status === "APPROVED").length, color: "var(--primary)" },
+    { name: "Pending",  value: joinedEvents.filter((p: any) => p.status === "PENDING").length,  color: "#f59e0b" }, // Using a nice amber for pending
+    { name: "Rejected", value: joinedEvents.filter((p: any) => p.status === "REJECTED").length, color: "var(--error)" },
+  ].filter(d => d.value > 0), [joinedEvents]);
 
   const handlePay = async (eventId: string) => {
     if (!user?.phoneNumber || !user?.name) {
@@ -75,6 +89,104 @@ export default function DashboardPage() {
           </button>
         </Link>
       </header>
+
+      {/* Overview cards */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: "Hosting (upcoming)", value: stats.upcomingHosting, icon: "event_available", color: "text-primary" },
+          { label: "Participants reached", value: stats.totalParticipants, icon: "group", color: "text-accent" },
+          { label: "Approved tickets", value: stats.approvedJoins, icon: "confirmation_number", color: "text-primary" },
+          { label: "Pending requests", value: stats.pendingJoins, icon: "schedule", color: "text-warn" },
+        ].map((c, i) => (
+          <div key={i} className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-6 ambient-shadow hover:border-outline-variant/50 transition-all flex flex-col h-full min-h-[140px]">
+            <div className="flex items-center justify-between mb-auto">
+              <span className={`material-symbols-outlined text-[28px] ${c.color}`}>{c.icon}</span>
+            </div>
+            <div className="mt-4">
+              <div className="font-headline font-bold text-3xl tabular-nums text-on-surface leading-none">{c.value}</div>
+              <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mt-2 leading-relaxed min-h-[20px]">{c.label}</div>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* Pie chart */}
+      {pieData.length > 0 && (
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-6 ambient-shadow">
+            <h3 className="font-headline font-semibold text-lg text-on-surface mb-2">Your participation status</h3>
+            <p className="text-secondary text-sm mb-6">A breakdown of the events you've requested to join.</p>
+            <div className="h-[260px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={4}
+                    stroke="var(--surface-container-lowest)"
+                    strokeWidth={2}
+                    animationBegin={0}
+                    animationDuration={1500}
+                  >
+                    {pieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--surface-container-lowest)",
+                      border: "1px solid var(--outline-variant)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "var(--on-surface)",
+                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
+                    }}
+                    itemStyle={{ color: "var(--on-surface)" }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconType="circle"
+                    formatter={(v) => <span className="text-[12px] font-bold text-secondary uppercase tracking-wider ml-1">{v}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-6 ambient-shadow flex flex-col h-full">
+            <h3 className="font-headline font-semibold text-lg text-on-surface">At a glance</h3>
+            <ul className="space-y-4 text-sm mt-2">
+              <li className="flex items-center justify-between py-2 border-b border-outline-variant/10">
+                <span className="text-secondary font-medium">Total events joined</span>
+                <span className="font-headline font-bold text-on-surface tabular-nums text-lg">{joinedEvents.length}</span>
+              </li>
+              <li className="flex items-center justify-between py-2 border-b border-outline-variant/10">
+                <span className="text-secondary font-medium">Events you host</span>
+                <span className="font-headline font-bold text-on-surface tabular-nums text-lg">{ownedEvents.length}</span>
+              </li>
+              <li className="flex items-center justify-between py-2">
+                <span className="text-secondary font-medium">Featured events you own</span>
+                <span className="font-headline font-bold text-accent tabular-nums text-lg">{ownedEvents.filter(e => e.isFeatured).length}</span>
+              </li>
+            </ul>
+            <div className="mt-auto pt-6 border-t border-outline-variant/10">
+               <p className="text-[11px] text-secondary leading-relaxed italic">
+                 Your engagement helps grow the Planora community. Keep exploring!
+               </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div className="pt-4">
+        <h2 className="font-headline text-2xl font-semibold tracking-tighter text-on-surface">
+          Your events
+        </h2>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-8 border-b border-outline-variant/20">
