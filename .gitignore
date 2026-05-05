@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Agentic task specs (local, not committed)
+.agent-tasks/
+.agents/
+CLAUDE.md
+AGENTS.md

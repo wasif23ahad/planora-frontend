@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { useNotifications } from "@/hooks/useNotifications";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const navLinks = [
   { label: "Events", href: "/events" },
@@ -30,13 +31,13 @@ export function Navbar() {
 
   return (
     <nav 
-      className={`sticky top-0 z-50 bg-[#FAFAF7] dark:bg-stone-900 w-full transition-all duration-200 border-b
-        ${scrolled ? "border-stone-200 dark:border-stone-800 shadow-sm" : "border-transparent"}`}
+      className={`sticky top-0 z-50 bg-surface w-full transition-all duration-200 border-b
+        ${scrolled ? "border-outline-variant shadow-sm" : "border-transparent"}`}
     >
       <div className="max-w-[1440px] mx-auto px-8 py-4 flex justify-between items-center">
         <div className="flex items-center gap-12">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-semibold tracking-tighter text-stone-900 dark:text-stone-50 font-headline hover:opacity-80 transition-opacity">
+          <Link href="/" className="text-2xl font-semibold tracking-tighter text-on-surface font-headline hover:opacity-80 transition-opacity">
             Planora
           </Link>
 
@@ -51,7 +52,7 @@ export function Navbar() {
                   className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150
                     ${isActive 
                       ? "text-primary border-b-2 border-primary pb-1" 
-                      : "text-secondary dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80"}`}
+                      : "text-secondary hover:text-on-surface hover:opacity-80"}`}
                 >
                   {link.label}
                 </Link>
@@ -62,6 +63,7 @@ export function Navbar() {
 
         {/* Actions Area */}
         <div className="flex items-center gap-6">
+          <ThemeToggle />
           {user ? (
             <div className="flex items-center gap-4">
               <div className="relative group">
@@ -177,17 +179,17 @@ export function Navbar() {
                   className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150 hidden sm:block
                     ${pathname.startsWith("/dashboard") 
                       ? "text-primary border-b-2 border-primary pb-1" 
-                      : "text-secondary dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80"}`}
+                      : "text-secondary hover:text-on-surface hover:opacity-80"}`}
                 >
                   Dashboard
                 </Link>
                 
                 <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/20">
-                  <div className="hidden sm:flex flex-col items-end">
-                     <span className="text-[12px] font-bold text-stone-900 dark:text-stone-50 leading-tight">
+                   <div className="hidden sm:flex flex-col items-end">
+                     <span className="text-[12px] font-bold text-on-surface leading-tight">
                        {user.name}
                      </span>
-                     <span className="text-[10px] text-secondary dark:text-stone-400 font-medium tracking-wide uppercase">
+                     <span className="text-[10px] text-secondary font-medium tracking-wide uppercase">
                        {user.role}
                      </span>
                   </div>
@@ -199,9 +201,9 @@ export function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-6">
-              <Link 
+               <Link 
                 href="/login" 
-                className="font-headline font-semibold tracking-tighter uppercase text-sm text-secondary dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:opacity-80 transition-opacity"
+                className="font-headline font-semibold tracking-tighter uppercase text-sm text-secondary hover:text-on-surface hover:opacity-80 transition-opacity"
               >
                 Log In
               </Link>
