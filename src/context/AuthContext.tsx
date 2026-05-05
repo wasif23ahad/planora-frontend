@@ -9,7 +9,7 @@ interface User {
   name: string;
   email: string;
   phoneNumber?: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "MANAGER" | "ADMIN";
 }
 
 interface AuthContextType {

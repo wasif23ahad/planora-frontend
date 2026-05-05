@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
 
           {/* Admin Panel Link */}
-          {user?.role === "ADMIN" && (
+          {(user?.role === "ADMIN" || user?.role === "MANAGER") && (
             <Link
               href="/admin/events"
               className={`flex items-center gap-3 px-4 py-3 border-l-4 rounded-r-lg font-body transition-colors mt-4
@@ -80,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className={`material-symbols-outlined ${pathname.startsWith("/admin") ? 'text-primary' : ''}`}>
                  admin_panel_settings
               </span>
-              <span>Admin Panel</span>
+              <span>{user.role === "MANAGER" ? "Manager Panel" : "Admin Panel"}</span>
             </Link>
           )}
 

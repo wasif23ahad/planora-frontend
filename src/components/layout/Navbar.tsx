@@ -248,9 +248,10 @@ export function Navbar() {
                       <Link href="/dashboard/invitations" className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
                         <span className="material-symbols-outlined text-[20px] text-secondary">mail</span> Invitations
                       </Link>
-                      {user.role === "ADMIN" && (
+                      {(user.role === "ADMIN" || user.role === "MANAGER") && (
                         <Link href="/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
-                          <span className="material-symbols-outlined text-[20px] text-secondary">admin_panel_settings</span> Admin Panel
+                          <span className="material-symbols-outlined text-[20px] text-secondary">admin_panel_settings</span> 
+                          {user.role === "MANAGER" ? "Manager Panel" : "Admin Panel"}
                         </Link>
                       )}
                       <div className="h-px bg-outline-variant my-1" />

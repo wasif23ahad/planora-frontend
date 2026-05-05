@@ -16,11 +16,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user } = useAuth();
 
+  const ALLOWED_ROLES = new Set(["ADMIN", "MANAGER"]);
+
   React.useEffect(() => {
-    if (user && user.role !== "ADMIN") router.push("/dashboard");
+    if (user && !ALLOWED_ROLES.has(user.role)) router.push("/dashboard");
   }, [user, router]);
 
-  if (!user || user.role !== "ADMIN") return null;
+  if (!user || !ALLOWED_ROLES.has(user.role)) return null;
 
   return (
     <div className="bg-background min-h-screen pt-[60px] font-sans">
@@ -29,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Sidebar */}
         <aside className="bg-white rounded-[12px] border border-border-base py-2 sticky top-[80px]">
           <div className="px-5 pt-4 pb-1.5 text-[12px] font-semibold text-accent uppercase tracking-[0.07em]">
-            Admin Panel
+            {user.role === "MANAGER" ? "Manager Panel" : "Admin Panel"}
           </div>
           {sidebarItems.map(item => {
             const isActive = pathname === item.href || (pathname === "/admin" && item.href === "/admin/events");

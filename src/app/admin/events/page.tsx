@@ -4,8 +4,11 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill, StatusPill } from "@/components/ui/Pill";
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function EventModerationPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const [events, setEvents] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -114,13 +117,15 @@ export default function EventModerationPage() {
                       >
                          {ev.isFeatured ? "star" : "grade"}
                       </button>
-                      <button 
-                        onClick={() => handleDelete(ev.id)}
-                        className="material-symbols-outlined w-10 h-10 rounded-full flex items-center justify-center text-error bg-error/5 border border-error/20 hover:bg-error/15 transition-all"
-                        title="Delete Event Permanently"
-                      >
-                         delete
-                      </button>
+                      {isAdmin && (
+                        <button 
+                          onClick={() => handleDelete(ev.id)}
+                          className="material-symbols-outlined w-10 h-10 rounded-full flex items-center justify-center text-error bg-error/5 border border-error/20 hover:bg-error/15 transition-all"
+                          title="Delete Event Permanently"
+                        >
+                           delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -4,8 +4,11 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/Pill";
 import api from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function UserModerationPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -97,26 +100,30 @@ export default function UserModerationPage() {
                     <StatusPill status={u.isActive ? "active" : "suspended"} />
                   </td>
                   <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant={u.isActive ? "outline" : "primary"}
-                        size="sm"
-                        onClick={() => handleToggle(u.id, u.isActive)}
-                        className={u.isActive ? "text-error border-error/20 hover:bg-error/5" : ""}
-                        icon={u.isActive ? "block" : "verified_user"}
-                      >
-                        {u.isActive ? "Suspend" : "Activate"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(u.id, u.name)}
-                        className="text-error border-error/20 hover:bg-error/10"
-                        icon="delete"
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                    {isAdmin ? (
+                      <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant={u.isActive ? "outline" : "primary"}
+                          size="sm"
+                          onClick={() => handleToggle(u.id, u.isActive)}
+                          className={u.isActive ? "text-error border-error/20 hover:bg-error/5" : ""}
+                          icon={u.isActive ? "block" : "verified_user"}
+                        >
+                          {u.isActive ? "Suspend" : "Activate"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(u.id, u.name)}
+                          className="text-error border-error/20 hover:bg-error/10"
+                          icon="delete"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-bold text-secondary uppercase tracking-widest italic opacity-40">View Only</span>
+                    )}
                   </td>
                 </tr>
               ))}
