@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill, StatusPill } from "@/components/ui/Pill";
 import { StarRating } from "@/components/ui/StarRating";
+import { RelatedEvents } from "@/components/events/RelatedEvents";
 
 export default function EventDetailsPage() {
   const { id } = useParams();
@@ -18,7 +19,6 @@ export default function EventDetailsPage() {
   const [event, setEvent] = useState<any>(null);
   const [participation, setParticipation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"details" | "reviews">("details");
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -280,165 +280,182 @@ export default function EventDetailsPage() {
                </div>
             </div>
 
-            {/* Tabs */}
-            <div className="border-b border-outline-variant/20 flex gap-8">
-              {["details", "reviews"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t as any)}
-                  className={`pb-4 font-headline font-semibold tracking-[-0.02em] whitespace-nowrap transition-all border-b-2 uppercase text-xs tracking-widest
-                    ${tab === t ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
-                >
-                  {t} {t === "reviews" ? `(${reviews.length})` : ""}
-                </button>
-              ))}
-            </div>
+            <div className="animate-fade-in space-y-20">
+              {/* Overview Section */}
+              <section id="overview">
+                <h2 className="font-headline text-on-surface mb-6 uppercase text-xs tracking-widest border-b border-outline-variant/10 pb-2 font-bold">Overview</h2>
+                <div className="font-body text-lg leading-relaxed text-secondary whitespace-pre-wrap max-w-2xl">
+                  {event.description || "No description provided."}
+                </div>
+              </section>
 
-            <div className="animate-fade-in min-h-[300px]">
-               {tab === "details" ? (
-                  <div className="space-y-8 max-w-2xl">
-                     <div className="font-body text-lg leading-relaxed text-secondary whitespace-pre-wrap">
-                        {event.description || "No description provided."}
-                     </div>
-                     
-                     <div className="bg-surface-container-low/30 rounded-xl p-8 border border-outline-variant/10">
-                        <h4 className="font-headline font-bold text-on-surface mb-4">About the Organizer</h4>
-                        <div className="flex items-center gap-4">
-                           <div className="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">
-                              {event.owner?.name?.[0] || 'O'}
-                           </div>
-                           <div>
-                              <p className="font-headline font-semibold text-on-surface">{event.owner?.name || "Event Organizer"}</p>
-                              <p className="text-sm text-secondary">Verified Community Member</p>
-                           </div>
-                        </div>
-                     </div>
+              {/* Details Section */}
+              <section id="details">
+                <h2 className="font-headline text-on-surface mb-6 uppercase text-xs tracking-widest border-b border-outline-variant/10 pb-2 font-bold">Details</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6 max-w-2xl">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Visibility</span>
+                    <span className="text-on-surface font-medium capitalize">{event.visibility?.toLowerCase()} Event</span>
                   </div>
-               ) : (
-                  <div className="space-y-8 max-w-2xl">
-                     {/* Review Summary */}
-                     <div className="p-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-center gap-8 ambient-shadow mb-8">
-                        <div className="text-5xl font-headline font-bold text-on-surface tabular-nums leading-none">
-                           {reviews.length > 0 ? avgRating.toFixed(1) : "—"}
-                        </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Category</span>
+                    <span className="text-on-surface font-medium">{event.category || "General"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Registration Fee</span>
+                    <span className="text-on-surface font-medium">{displayFee === 0 ? "Free" : `৳${displayFee.toLocaleString()}`}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">Participants</span>
+                    <span className="text-on-surface font-medium">{event._count?.participations || 0} Joined</span>
+                  </div>
+                </div>
+
+                <div className="mt-10 bg-surface-container-low/30 rounded-xl p-8 border border-outline-variant/10 max-w-2xl">
+                  <h4 className="font-headline font-bold text-on-surface mb-4">About the Organizer</h4>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">
+                      {event.owner?.name?.[0] || 'O'}
+                    </div>
+                    <div>
+                      <p className="font-headline font-semibold text-on-surface">{event.owner?.name || "Event Organizer"}</p>
+                      <p className="text-sm text-secondary">Verified Community Member</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Reviews Section */}
+              <section id="reviews">
+                <h2 className="font-headline text-on-surface mb-8 uppercase text-xs tracking-widest border-b border-outline-variant/10 pb-2 font-bold">Reviews ({reviews.length})</h2>
+                
+                <div className="max-w-2xl space-y-8">
+                  {/* Review Summary */}
+                  <div className="p-8 bg-surface-container-lowest border border-outline-variant/20 rounded-xl flex items-center gap-8 ambient-shadow mb-8">
+                    <div className="text-5xl font-headline font-bold text-on-surface tabular-nums leading-none">
+                      {reviews.length > 0 ? avgRating.toFixed(1) : "—"}
+                    </div>
+                    <div>
+                      <StarRating rating={avgRating} />
+                      <p className="text-sm text-secondary mt-1 font-medium">Based on {reviews.length} verified review{reviews.length !== 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+
+                  {/* Write Review Form */}
+                  {participation?.status === 'APPROVED' && (!reviews.some(r => r.userId === user?.id) || editingReviewId) && (
+                    <div className="p-8 bg-primary/5 border border-primary/10 rounded-2xl animate-fade-in mb-8">
+                      <div className="flex justify-between items-start mb-6">
                         <div>
-                           <StarRating rating={avgRating} />
-                           <p className="text-sm text-secondary mt-1 font-medium">Based on {reviews.length} verified review{reviews.length !== 1 ? 's' : ''}</p>
+                          <h4 className="font-headline font-bold text-on-surface mb-2">
+                            {editingReviewId ? "Edit Your Review" : "Write a Review"}
+                          </h4>
+                          <p className="text-xs text-secondary uppercase tracking-widest font-bold">
+                            {editingReviewId ? "Update your experience" : "Share your experience with the community"}
+                          </p>
                         </div>
-                     </div>
-
-                     {/* Write Review Form */}
-                     {participation?.status === 'APPROVED' && (!reviews.some(r => r.userId === user?.id) || editingReviewId) && (
-                        <div className="p-8 bg-primary/5 border border-primary/10 rounded-2xl animate-fade-in mb-8">
-                           <div className="flex justify-between items-start mb-6">
-                              <div>
-                                 <h4 className="font-headline font-bold text-on-surface mb-2">
-                                    {editingReviewId ? "Edit Your Review" : "Write a Review"}
-                                 </h4>
-                                 <p className="text-xs text-secondary uppercase tracking-widest font-bold">
-                                    {editingReviewId ? "Update your experience" : "Share your experience with the community"}
-                                 </p>
-                              </div>
-                              {editingReviewId && (
-                                 <button 
-                                    onClick={() => { setEditingReviewId(null); setReviewText(""); setReviewRating(5); }}
-                                    className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
-                                 >
-                                    Cancel Editing
-                                 </button>
-                              )}
-                           </div>
-                           
-                           <form onSubmit={handleReviewSubmit} className="space-y-6">
-                              <div className="flex items-center gap-4 bg-surface px-4 py-2 rounded-lg w-fit border border-outline-variant/20">
-                                 <span className="text-xs font-bold text-secondary">Rating:</span>
-                                 <div className="flex gap-1">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                       <button
-                                          key={star}
-                                          type="button"
-                                          onClick={() => setReviewRating(star)}
-                                          className={`material-symbols-outlined text-2xl transition-all ${star <= reviewRating ? 'text-yellow-500 fill-1' : 'text-secondary/30'}`}
-                                          style={{ fontVariationSettings: star <= reviewRating ? "'FILL' 1" : "'FILL' 0" }}
-                                       >
-                                          star
-                                       </button>
-                                    ))}
-                                 </div>
-                              </div>
-                              
-                              <textarea
-                                 value={reviewText}
-                                 onChange={(e) => setReviewText(e.target.value)}
-                                 placeholder="Tell others what you thought about this event..."
-                                 className="w-full bg-surface border border-outline-variant/30 rounded-xl p-4 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[120px] resize-none"
-                                 required
-                              />
-                              
-                              <Button 
-                                 type="submit" 
-                                 variant="primary" 
-                                 disabled={submittingReview}
-                                 icon={submittingReview ? undefined : "send"}
-                              >
-                                 {submittingReview ? (editingReviewId ? "Updating..." : "Posting...") : (editingReviewId ? "Update Review" : "Post Review")}
-                              </Button>
-                           </form>
-                        </div>
-                     )}
-
-                     {/* Reviews List */}
-                     <div className="space-y-6">
-                        {reviews.length > 0 ? (
-                           reviews.map((review) => (
-                              <div key={review.id} className="p-6 bg-surface-container-lowest border border-outline-variant/10 rounded-2xl animate-fade-in">
-                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                       <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">
-                                          {review.user?.name?.[0] || 'U'}
-                                       </div>
-                                       <div>
-                                          <p className="font-headline font-semibold text-on-surface text-sm">{review.user?.name}</p>
-                                          <p className="text-[10px] text-secondary uppercase tracking-wider">
-                                             {new Date(review.createdAt).toLocaleDateString()}
-                                             {review.updatedAt !== review.createdAt && " (edited)"}
-                                          </p>
-                                       </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                       <StarRating rating={review.rating} />
-                                       {user && review.userId === user.id && (
-                                          <div className="flex gap-4">
-                                             <button 
-                                                onClick={() => startEditing(review)}
-                                                className="text-[10px] font-bold text-secondary hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-widest"
-                                             >
-                                                <span className="material-symbols-outlined text-[14px]">edit</span>
-                                                Edit
-                                             </button>
-                                             <button 
-                                                onClick={() => handleDeleteReview(review.id)}
-                                                className="text-[10px] font-bold text-secondary hover:text-error transition-colors flex items-center gap-1 uppercase tracking-widest"
-                                             >
-                                                <span className="material-symbols-outlined text-[14px]">delete</span>
-                                                Delete
-                                             </button>
-                                          </div>
-                                       )}
-                                    </div>
-                                 </div>
-                                 <p className="text-secondary text-sm leading-relaxed italic">"{review.comment}"</p>
-                              </div>
-                           ))
-                        ) : (
-                           <div className="py-20 text-center space-y-4">
-                              <span className="material-symbols-outlined text-[48px] text-secondary/30">rate_review</span>
-                              <p className="text-secondary text-sm">No detailed reviews have been left for this event yet.</p>
-                           </div>
+                        {editingReviewId && (
+                          <button 
+                            onClick={() => { setEditingReviewId(null); setReviewText(""); setReviewRating(5); }}
+                            className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
+                          >
+                            Cancel Editing
+                          </button>
                         )}
-                     </div>
+                      </div>
+                      
+                      <form onSubmit={handleReviewSubmit} className="space-y-6">
+                        <div className="flex items-center gap-4 bg-surface px-4 py-2 rounded-lg w-fit border border-outline-variant/20">
+                          <span className="text-xs font-bold text-secondary">Rating:</span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewRating(star)}
+                                className={`material-symbols-outlined text-2xl transition-all ${star <= reviewRating ? 'text-yellow-500 fill-1' : 'text-secondary/30'}`}
+                                style={{ fontVariationSettings: star <= reviewRating ? "'FILL' 1" : "'FILL' 0" }}
+                              >
+                                star
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <textarea
+                          value={reviewText}
+                          onChange={(e) => setReviewText(e.target.value)}
+                          placeholder="Tell others what you thought about this event..."
+                          className="w-full bg-surface border border-outline-variant/30 rounded-xl p-4 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[120px] resize-none"
+                          required
+                        />
+                        
+                        <Button 
+                          type="submit" 
+                          variant="primary" 
+                          disabled={submittingReview}
+                          icon={submittingReview ? undefined : "send"}
+                        >
+                          {submittingReview ? (editingReviewId ? "Updating..." : "Posting...") : (editingReviewId ? "Update Review" : "Post Review")}
+                        </Button>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Reviews List */}
+                  <div className="space-y-6">
+                    {reviews.length > 0 ? (
+                      reviews.map((review) => (
+                        <div key={review.id} className="p-6 bg-surface-container-lowest border border-outline-variant/10 rounded-2xl animate-fade-in">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">
+                                {review.user?.name?.[0] || 'U'}
+                              </div>
+                              <div>
+                                <p className="font-headline font-semibold text-on-surface text-sm">{review.user?.name}</p>
+                                <p className="text-[10px] text-secondary uppercase tracking-wider">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                  {review.updatedAt !== review.createdAt && " (edited)"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <StarRating rating={review.rating} />
+                              {user && review.userId === user.id && (
+                                <div className="flex gap-4">
+                                  <button 
+                                    onClick={() => startEditing(review)}
+                                    className="text-[10px] font-bold text-secondary hover:text-primary transition-colors flex items-center gap-1 uppercase tracking-widest"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                                    Edit
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteReview(review.id)}
+                                    className="text-[10px] font-bold text-secondary hover:text-error transition-colors flex items-center gap-1 uppercase tracking-widest"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-secondary text-sm leading-relaxed italic">"{review.comment}"</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-20 text-center space-y-4">
+                        <span className="material-symbols-outlined text-[48px] text-secondary/30">rate_review</span>
+                        <p className="text-secondary text-sm">No detailed reviews have been left for this event yet.</p>
+                      </div>
+                    )}
                   </div>
-               )}
+                </div>
+              </section>
+
+              {/* Related Events Section */}
+              <RelatedEvents currentEventId={event.id} category={event.category} />
             </div>
           </div>
 
