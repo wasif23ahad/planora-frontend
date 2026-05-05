@@ -16,6 +16,12 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+const DEMO_ACCOUNTS = [
+  { role: "User",    email: "john@example.com",    password: "password123" },
+  { role: "Manager", email: "owner@planora.com",   password: "password123" },
+  { role: "Admin",   email: "admin@planora.com",   password: "password123" },
+];
+
 type FormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
@@ -28,6 +34,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(loginSchema),
@@ -44,6 +51,21 @@ export default function LoginPage() {
       const message = err.response?.data?.message || "Login failed. Please check your credentials.";
       setError(message);
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (email: string) => {
+    const d = DEMO_ACCOUNTS.find(acc => acc.email === email);
+    if (!d) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.post("/auth/login", { email: d.email, password: d.password });
+      login(response.data.token, response.data.user);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError("Demo login failed. Please ensure the backend is running and seeded.");
       setIsLoading(false);
     }
   };
@@ -86,6 +108,23 @@ export default function LoginPage() {
                  {...register("password")}
                  error={errors.password?.message}
                />
+            </div>
+          </div>
+
+          {/* Demo accounts */}
+          <div className="space-y-3 pt-2">
+            <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">Demo accounts (Instant Login)</p>
+            <div className="grid grid-cols-3 gap-2">
+              {DEMO_ACCOUNTS.map((d) => (
+                <button
+                  key={d.email}
+                  type="button"
+                  onClick={() => handleDemoLogin(d.email)}
+                  className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg border border-outline-variant bg-surface-container-low text-on-surface hover:border-primary hover:text-primary transition-colors"
+                >
+                  {d.role}
+                </button>
+              ))}
             </div>
           </div>
 
