@@ -32,6 +32,20 @@ export default function Homepage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-reveal');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [loading, events]);
+
   const filterMap: Record<string, (e: any) => boolean> = {
     "public-free":  (e) => e.visibility?.toLowerCase() === "public" && (e.fee === 0 || e.feeCents === 0 || (!e.fee && !e.feeCents)),
     "public-paid":  (e) => e.visibility?.toLowerCase() === "public" && (e.fee > 0 || e.feeCents > 0),
@@ -97,7 +111,7 @@ export default function Homepage() {
       
       {/* ── 01: HERO SECTION ───────────────────────────────────── */}
       {heroEvent && (
-        <section className="min-h-[60vh] max-h-[70vh] grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow">
+        <section className="reveal min-h-[60vh] max-h-[70vh] grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow">
           <div className="md:col-span-5 h-full relative overflow-hidden bg-surface-container-high">
             {heroEvent.coverImage ? (
               <Image 
@@ -133,7 +147,7 @@ export default function Homepage() {
       )}
 
       {/* ── 02: STATS STRIP ────────────────────────────────────── */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="reveal grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Active events", value: events.length },
           { label: "Hosts", value: new Set(events.map(e => e.owner?.name).filter(Boolean)).size },
@@ -148,7 +162,7 @@ export default function Homepage() {
       </section>
 
       {/* ── 03: CATEGORIES GRID ────────────────────────────────── */}
-      <section>
+      <section className="reveal">
         <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface mb-8">Browse by category</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
@@ -162,9 +176,9 @@ export default function Homepage() {
             <Link
               key={c.label}
               href={`/events?category=${encodeURIComponent(c.label)}`}
-              className="group bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary transition-colors"
+              className="group bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary hover:scale-105 hover:-translate-y-1 transition-all duration-300 glow-primary"
             >
-              <span className="material-symbols-outlined text-[32px] text-primary group-hover:scale-110 transition-transform">{c.icon}</span>
+              <span className="material-symbols-outlined text-[32px] text-primary transition-all duration-300 animate-icon-pop group-hover:fill-1">{c.icon}</span>
               <span className="text-sm font-headline font-semibold text-on-surface">{c.label}</span>
             </Link>
           ))}
@@ -172,7 +186,7 @@ export default function Homepage() {
       </section>
 
       {/* ── 04: UPCOMING EVENTS SLIDER ─────────────────────────── */}
-      <section>
+      <section className="reveal">
         <div className="flex justify-between items-end mb-10">
           <h2 className="font-headline text-4xl font-semibold tracking-[-0.03em] text-on-surface">Upcoming events</h2>
           <div className="flex items-center gap-6">
@@ -215,7 +229,7 @@ export default function Homepage() {
       </section>
 
       {/* ── 05: HOW IT WORKS ───────────────────────────────────── */}
-      <section>
+      <section className="reveal">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">How Planora works</h2>
           <p className="text-secondary mt-3">Three steps from idea to packed room.</p>
@@ -239,7 +253,7 @@ export default function Homepage() {
       </section>
 
       {/* ── 06: CATEGORY FILTER & GRID ────────────────────────── */}
-      <section>
+      <section className="reveal">
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-outline-variant/30 mb-10">
           <nav className="flex gap-8 overflow-x-auto hide-scrollbar">
             {[
@@ -282,7 +296,7 @@ export default function Homepage() {
       </section>
 
       {/* ── 07: TESTIMONIALS ───────────────────────────────────── */}
-      <section>
+      <section className="reveal">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">What people say</h2>
           <p className="text-secondary mt-3">From hosts and attendees who use Planora every week.</p>
@@ -306,7 +320,7 @@ export default function Homepage() {
       </section>
 
       {/* ── 08: FAQ ────────────────────────────────────────────── */}
-      <section className="grid grid-cols-1 md:grid-cols-12 gap-12">
+      <section className="reveal grid grid-cols-1 md:grid-cols-12 gap-12">
         <div className="md:col-span-4">
           <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">Frequently asked</h2>
           <p className="text-secondary mt-3">If yours isn't here, ask us in <Link href="/contact" className="text-primary underline underline-offset-4">Contact</Link>.</p>
