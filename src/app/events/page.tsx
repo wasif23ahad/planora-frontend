@@ -1,192 +1,266 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { EventCard } from "@/components/events/EventCard";
-import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
-export default function EventsPage() {
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({
-    public: true,
-    private: true,
-    free: true,
-    paid: true,
-  });
-  const [sortBy, setSortBy] = useState("date");
+const PAGE_SIZE = 12;
 
+const CATEGORIES = ["Technology", "Coding", "Networking", "Food", "Arts", "Sports", "Culture", "Business"];
+
+function EventsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [events, setEvents] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // controlled inputs reflect URL state
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  const [category, setCategory] = useState(searchParams.get("category") ?? "");
+  const [visibility, setVisibility] = useState<"all" | "PUBLIC" | "PRIVATE">((searchParams.get("visibility") as any) ?? "all");
+  const [fee, setFee] = useState<"all" | "free" | "paid">((searchParams.get("fee") as any) ?? "all");
+  const [sort, setSort] = useState(searchParams.get("sort") ?? "date_asc");
+  const page = Math.max(1, Number(searchParams.get("page") ?? 1) || 1);
+
+  const buildCategoryParam = useMemo(() => {
+    // If both visibility + fee + no category -> use compound key the backend understands
+    if (!category && visibility !== "all" && fee !== "all") {
+      const v = visibility.toLowerCase();
+      const f = fee;
+      return `${v}-${f}`;
+    }
+    return category;
+  }, [category, visibility, fee]);
+
+  // Sync URL on change
   useEffect(() => {
-    const fetchEvents = async () => {
+    const sp = new URLSearchParams();
+    if (search) sp.set("q", search);
+    if (category) sp.set("category", category);
+    if (visibility !== "all") sp.set("visibility", visibility);
+    if (fee !== "all") sp.set("fee", fee);
+    if (sort !== "date_asc") sp.set("sort", sort);
+    if (page > 1) sp.set("page", String(page));
+    router.replace(`/events${sp.toString() ? `?${sp.toString()}` : ""}`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category, visibility, fee, sort, page]);
+
+  // Fetch
+  useEffect(() => {
+    const t = setTimeout(async () => {
       try {
         setLoading(true);
-        // Fetch upcoming events only to match the UI context and avoid filling the limit with past events.
-        const res = await api.get("/events?limit=100&upcoming=true");
-        setEvents(res.data.items ?? []);
+        const params: Record<string, any> = { page, limit: PAGE_SIZE, upcoming: true, sort };
+        if (search) params.q = search;
+        if (buildCategoryParam) params.category = buildCategoryParam;
+
+        const { data } = await api.get("/events", { params });
+        setEvents(data.items ?? []);
+        setTotal(data.total ?? 0);
       } catch (err) {
         console.error("Failed to fetch events:", err);
       } finally {
         setLoading(false);
       }
-    };
-    fetchEvents();
-  }, []);
+    }, 200); // debounce search
+    return () => clearTimeout(t);
+  }, [search, buildCategoryParam, sort, page]);
 
-  const filteredEvents = events.filter((e) => {
-    const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase()) || 
-                         e.description?.toLowerCase().includes(search.toLowerCase());
-    
-    const feeAmount = e.fee ?? (e.feeCents ? e.feeCents / 100 : 0);
-    const isPublic = e.visibility?.toLowerCase() === "public";
-    const isPrivate = e.visibility?.toLowerCase() === "private";
-    const isFree = feeAmount === 0;
-    const isPaid = feeAmount > 0;
+  // Apply visibility/fee client-side ONLY when category is a literal value
+  // (compound keys already encode visibility+fee on the server)
+  const visible = useMemo(() => {
+    if (!category) return events;
+    return events.filter(e => {
+      const isPublic = e.visibility === "PUBLIC";
+      const feeAmount = e.feeCents ? e.feeCents / 100 : (e.fee ?? 0);
+      const isFree = feeAmount === 0;
+      const visOk = visibility === "all" || (visibility === "PUBLIC" ? isPublic : !isPublic);
+      const feeOk = fee === "all" || (fee === "free" ? isFree : !isFree);
+      return visOk && feeOk;
+    });
+  }, [events, category, visibility, fee]);
 
-    const matchesVisibility = (isPublic && filters.public) || (isPrivate && filters.private);
-    const matchesFee = (isFree && filters.free) || (isPaid && filters.paid);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-    return matchesSearch && matchesVisibility && matchesFee;
-  }).sort((a, b) => {
-    if (sortBy === "date") return new Date(a.date).getTime() - new Date(b.date).getTime();
-    const feeA = a.fee ?? (a.feeCents ? a.feeCents / 100 : 0);
-    const feeB = b.fee ?? (b.feeCents ? b.feeCents / 100 : 0);
-    if (sortBy === "fee-low") return feeA - feeB;
-    if (sortBy === "fee-high") return feeB - feeA;
-    return 0;
-  });
+  const setPage = (p: number) => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set("page", String(p));
+    router.replace(`/events?${sp.toString()}`, { scroll: false });
+  };
+
+  const reset = () => {
+    setSearch("");
+    setCategory("");
+    setVisibility("all");
+    setFee("all");
+    setSort("date_asc");
+    setPage(1);
+  };
 
   return (
     <main className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-12">
-      
-      {/* ── SIDEBAR FILTERS ────────────────────────────────── */}
+
+      {/* Sidebar filters */}
       <aside className="md:col-span-3 space-y-10">
-        <div className="sticky top-28">
-          <h2 className="font-headline text-2xl font-semibold mb-8 text-on-surface">Experience Filters</h2>
-          
-          <div className="space-y-8">
-            {/* Visibility Group */}
-            <div className="space-y-4">
-              <h3 className="font-label text-xs font-bold uppercase tracking-widest text-secondary">Access</h3>
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={filters.public}
-                    onChange={(e) => setFilters({...filters, public: e.target.checked})}
-                    className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Public Events</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={filters.private}
-                    onChange={(e) => setFilters({...filters, private: e.target.checked})}
-                    className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Private Events</span>
-                </label>
-              </div>
-            </div>
+        <div className="md:sticky md:top-28 space-y-8">
+          <h2 className="font-headline text-2xl font-semibold text-on-surface">Filters</h2>
 
-            {/* Fee Group */}
-            <div className="space-y-4">
-              <h3 className="font-label text-xs font-bold uppercase tracking-widest text-secondary">Registration</h3>
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={filters.free}
-                    onChange={(e) => setFilters({...filters, free: e.target.checked})}
-                    className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Free Entry</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={filters.paid}
-                    onChange={(e) => setFilters({...filters, paid: e.target.checked})}
-                    className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 cursor-pointer"
-                  />
-                  <span className="text-sm font-medium text-on-surface-variant group-hover:text-on-surface transition-colors">Paid Entry</span>
-                </label>
-              </div>
-            </div>
-
-            <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => setFilters({public: true, private: true, free: true, paid: true})}
+          {/* Category */}
+          <div className="space-y-3">
+            <h3 className="font-label text-xs font-bold uppercase tracking-widest text-secondary">Category</h3>
+            <select
+              value={category}
+              onChange={(e) => { setCategory(e.target.value); setPage(1); }}
+              className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2.5 text-sm text-on-surface focus:border-primary outline-none"
             >
-                Reset Filters
-            </Button>
+              <option value="">All categories</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
+
+          {/* Visibility */}
+          <div className="space-y-3">
+            <h3 className="font-label text-xs font-bold uppercase tracking-widest text-secondary">Access</h3>
+            <div className="flex flex-col gap-2">
+              {(["all","PUBLIC","PRIVATE"] as const).map(v => (
+                <label key={v} className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    checked={visibility === v}
+                    onChange={() => { setVisibility(v); setPage(1); }}
+                    className="w-4 h-4 text-primary"
+                  />
+                  <span className="text-sm text-on-surface">{v === "all" ? "All" : v === "PUBLIC" ? "Public" : "Private"}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Fee */}
+          <div className="space-y-3">
+            <h3 className="font-label text-xs font-bold uppercase tracking-widest text-secondary">Registration</h3>
+            <div className="flex flex-col gap-2">
+              {(["all","free","paid"] as const).map(f => (
+                <label key={f} className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="fee"
+                    checked={fee === f}
+                    onChange={() => { setFee(f); setPage(1); }}
+                    className="w-4 h-4 text-primary"
+                  />
+                  <span className="text-sm text-on-surface">{f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <Button variant="outline" size="sm" className="w-full" onClick={reset}>Reset filters</Button>
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ───────────────────────────────────── */}
+      {/* Main */}
       <section className="md:col-span-9 space-y-12">
-        
-        {/* Toolbar: Search & Sort */}
+
+        {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div className="space-y-1">
-            <h1 className="font-headline text-4xl font-semibold tracking-[-0.03em] text-on-surface">Discover Events</h1>
-            <p className="text-secondary text-sm font-medium">Showing {filteredEvents.length} upcoming experiences</p>
+          <div>
+            <h1 className="font-headline text-4xl font-semibold tracking-tighter text-on-surface">Discover events</h1>
+            <p className="text-secondary text-sm font-medium">Showing {visible.length} of {total} upcoming experiences</p>
           </div>
-          
           <div className="w-full md:w-auto flex flex-col sm:flex-row gap-4 grow max-w-xl">
-            <div className="relative flex-grow">
+            <div className="relative grow">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-[20px]">search</span>
-              <input 
-                type="text"
+              <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by title, topic, or host..."
-                className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg pl-12 pr-4 py-3 text-sm focus:border-primary focus:ring-0 outline-none transition-all ambient-shadow"
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search by title or description…"
+                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-12 pr-4 py-3 text-sm focus:border-primary outline-none transition-all ambient-shadow"
               />
             </div>
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-4 py-3 text-sm font-medium text-on-surface focus:border-primary outline-none appearance-none cursor-pointer ambient-shadow min-w-[160px]"
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value); setPage(1); }}
+              className="bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 text-sm font-medium text-on-surface focus:border-primary outline-none cursor-pointer ambient-shadow min-w-[160px]"
             >
-              <option value="date">Soonest First</option>
-              <option value="fee-low">Price: Low to High</option>
-              <option value="fee-high">Price: High to Low</option>
+              <option value="date_asc">Soonest first</option>
+              <option value="date_desc">Latest first</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
             </select>
           </div>
         </div>
 
-        {/* Results Grid */}
+        {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-[400px] bg-surface-container-low animate-pulse rounded-xl"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-[400px] bg-surface-container-low animate-pulse rounded-xl" />
             ))}
           </div>
-        ) : filteredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((e) => (
-              <EventCard key={e.id} event={e} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-32 text-center space-y-4 bg-surface-container-low/20 rounded-2xl border border-dashed border-outline-variant/50">
-            <span className="material-symbols-outlined text-[64px] text-secondary/30">event_busy</span>
-            <div className="space-y-1">
-               <h3 className="font-headline text-xl font-semibold text-on-surface">No events found</h3>
-               <p className="text-secondary text-sm max-w-xs">Try adjusting your filters or search terms to find what you're looking for.</p>
+        ) : visible.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {visible.map((e) => <EventCard key={e.id} event={e} />)}
             </div>
-            <Button variant="primary" size="sm" onClick={() => {setSearch(""); setFilters({public: true, private: true, free: true, paid: true});}}>
-               Clear all filters
-            </Button>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <nav className="flex items-center justify-center gap-2 pt-6">
+                <button
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-secondary hover:text-on-surface disabled:opacity-30"
+                  aria-label="Previous page"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+                {Array.from({ length: totalPages }).slice(0, 7).map((_, i) => {
+                  const p = i + 1;
+                  const active = p === page;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-10 h-10 rounded-full text-sm font-medium ${active ? "bg-primary text-on-primary" : "text-on-surface hover:bg-surface-container-low"}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
+                  className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-secondary hover:text-on-surface disabled:opacity-30"
+                  aria-label="Next page"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
+              </nav>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-32 text-center space-y-4 bg-surface-container-low/50 rounded-2xl border border-dashed border-outline-variant">
+            <span className="material-symbols-outlined text-[64px] text-secondary/30">event_busy</span>
+            <h3 className="font-headline text-xl font-semibold text-on-surface">No events found</h3>
+            <p className="text-secondary text-sm max-w-xs">Try adjusting your filters or search terms.</p>
+            <Button variant="primary" size="sm" onClick={reset}>Clear all filters</Button>
           </div>
         )}
       </section>
     </main>
+  );
+}
+
+export default function EventsPageWrapper() {
+  return (
+    <React.Suspense fallback={<div className="py-32 text-center text-secondary">Loading events…</div>}>
+      <EventsPage />
+    </React.Suspense>
   );
 }
