@@ -32,10 +32,11 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
   return (
     <Link 
       href={`/events/${event.id}`}
-      className={`group bg-surface-container-lowest rounded-xl ghost-border overflow-hidden flex flex-col h-full hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 active:scale-[0.98] ${isSlider ? 'w-[320px] shrink-0 snap-start' : 'ambient-shadow'}`}
+      className={`group bg-surface-container-lowest rounded-xl ghost-border overflow-hidden flex flex-col hover:border-primary/40 hover:-translate-y-1 transition-all duration-300 active:scale-[0.98] 
+        ${isSlider ? 'w-[320px] h-[420px] shrink-0 snap-start' : 'w-full h-full min-h-[440px] ambient-shadow'}`}
     >
       {/* Cover Image Container */}
-      <div className={`${isSlider ? 'h-[200px]' : 'aspect-video'} relative overflow-hidden bg-surface-container-high`}>
+      <div className={`${isSlider ? 'h-[180px]' : 'aspect-video'} relative overflow-hidden bg-surface-container-high shrink-0`}>
         {event.coverImage ? (
           <Image 
             src={event.coverImage} 
@@ -57,20 +58,20 @@ export function EventCard({ event, variant = "grid" }: EventCardProps) {
       </div>
 
       {/* Content Section */}
-      <div className="p-6 flex flex-col grow gap-3">
-        <div className="flex items-center gap-2 text-secondary">
+      <div className="p-6 flex flex-col grow min-h-0">
+        <div className="flex items-center gap-2 text-secondary mb-3">
           <span className="material-symbols-outlined text-[18px]">calendar_today</span>
           <span className="font-headline font-semibold text-xs uppercase tracking-widest text-on-surface">
             {new Date(event.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
           </span>
         </div>
 
-        <h3 className="text-xl md:text-2xl font-headline font-semibold text-on-surface line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors">
+        <h3 className="text-xl md:text-2xl font-headline font-semibold text-on-surface line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors min-h-14 mb-3">
           {event.title}
         </h3>
 
         {!isSlider && (
-          <div className="text-sm text-secondary flex items-center gap-2 mb-2">
+          <div className="text-sm text-secondary flex items-center gap-2 mb-2 min-h-5">
             <span className="material-symbols-outlined text-[18px]">location_on</span>
             <span className="truncate">{event.venue}</span>
           </div>
