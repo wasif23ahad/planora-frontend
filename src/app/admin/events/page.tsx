@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill, StatusPill } from "@/components/ui/Pill";
+import { TablePager } from "@/components/ui/TablePager";
+import { useTable } from "@/hooks/useTable";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
@@ -12,6 +14,7 @@ export default function EventModerationPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +53,17 @@ export default function EventModerationPage() {
     }
   };
 
+  // 1. Apply category filter
+  const filteredEvents = events.filter(e => 
+    categoryFilter === "all" ? true : e.category === categoryFilter
+  );
+
+  // 2. Apply table logic
+  const t = useTable(filteredEvents, {
+    searchKeys: ["title", "owner.name", "category", "venue"],
+    pageSize: 10
+  });
+
   if (loading) return <div className="py-24 text-center text-secondary animate-pulse font-headline">Loading management metrics...</div>;
 
   return (
@@ -74,6 +88,29 @@ export default function EventModerationPage() {
         ))}
       </div>
 
+      {/* Toolbar */}
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        <div className="relative flex-grow w-full md:w-auto">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-[20px]">search</span>
+          <input
+            value={t.search}
+            onChange={(e) => { t.setSearch(e.target.value); t.setPage(1); }}
+            placeholder="Search title, host, or category…"
+            className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl pl-12 pr-4 py-3 text-sm focus:border-primary outline-none transition-colors"
+          />
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={(e) => { setCategoryFilter(e.target.value); t.setPage(1); }}
+          className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3 text-sm text-on-surface focus:border-primary outline-none cursor-pointer font-semibold min-w-[160px]"
+        >
+          <option value="all">All Categories</option>
+          {Array.from(new Set(events.map(e => e.category))).map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Events Table */}
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 overflow-hidden ambient-shadow">
         <div className="overflow-x-auto">
@@ -89,7 +126,17 @@ export default function EventModerationPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">
-              {events.map(ev => (
+              {t.rows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-24 text-secondary">
+                    <div className="flex flex-col items-center gap-4">
+                      <span className="material-symbols-outlined text-[48px] opacity-20">event_busy</span>
+                      <p>No experiences match your current search or filters.</p>
+                      <Button variant="outline" size="sm" onClick={() => { t.setSearch(""); setCategoryFilter("all"); }}>Clear Filters</Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : t.rows.map(ev => (
                 <tr key={ev.id} className="hover:bg-surface-container-low/30 transition-colors group">
                   <td className="px-8 py-6">
                     <div className="font-headline font-bold text-on-surface text-base">{ev.title}</div>
@@ -133,6 +180,13 @@ export default function EventModerationPage() {
             </tbody>
           </table>
         </div>
+        <TablePager 
+          page={t.page} 
+          totalPages={t.totalPages} 
+          total={t.total} 
+          pageSize={t.pageSize} 
+          onChange={t.setPage} 
+        />
       </div>
     </div>
   );

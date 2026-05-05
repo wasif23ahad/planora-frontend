@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { StatusPill } from "@/components/ui/Pill";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { TablePager } from "@/components/ui/TablePager";
+import { useTable } from "@/hooks/useTable";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 export default function DashboardPage() {
@@ -27,9 +29,28 @@ export default function DashboardPage() {
     return { upcomingHosting, totalParticipants, approvedJoins, pendingJoins };
   }, [ownedEvents, joinedEvents]);
 
+  // 1. Setup table logic for both
+  const tHosting = useTable(ownedEvents, { 
+    searchKeys: ["title", "venue", "category"], 
+    pageSize: 8 
+  });
+  
+  const tAttending = useTable(joinedEvents, { 
+    searchKeys: ["event.title", "event.venue", "event.owner.name"], 
+    pageSize: 8 
+  });
+
+  // Shared search handler
+  const handleSearch = (q: string) => {
+    tHosting.setSearch(q);
+    tHosting.setPage(1);
+    tAttending.setSearch(q);
+    tAttending.setPage(1);
+  };
+
   const pieData = useMemo(() => [
     { name: "Approved", value: joinedEvents.filter((p: any) => p.status === "APPROVED").length, color: "var(--primary)" },
-    { name: "Pending",  value: joinedEvents.filter((p: any) => p.status === "PENDING").length,  color: "#f59e0b" }, // Using a nice amber for pending
+    { name: "Pending",  value: joinedEvents.filter((p: any) => p.status === "PENDING").length,  color: "#f59e0b" }, 
     { name: "Rejected", value: joinedEvents.filter((p: any) => p.status === "REJECTED").length, color: "var(--error)" },
   ].filter(d => d.value > 0), [joinedEvents]);
 
@@ -184,182 +205,204 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <div className="pt-4">
-        <h2 className="font-headline text-2xl font-semibold tracking-tighter text-on-surface">
-          Your events
-        </h2>
-      </div>
+      <div className="pt-4 space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div>
+            <h2 className="font-headline text-2xl font-semibold tracking-tighter text-on-surface">
+              Your events
+            </h2>
+            <p className="text-secondary text-sm mt-1">Track and search through your event history.</p>
+          </div>
+          
+          <div className="relative w-full md:w-[320px]">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-[20px]">search</span>
+            <input
+              value={activeTab === "hosting" ? tHosting.search : tAttending.search}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder={`Search ${activeTab === "hosting" ? "hosted" : "joined"} events…`}
+              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl pl-12 pr-4 py-3 text-sm focus:border-primary outline-none transition-colors ambient-shadow"
+            />
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex gap-8 border-b border-outline-variant/20">
-        <button 
-          onClick={() => setActiveTab("attending")}
-          className={`pb-4 font-headline font-semibold text-xs uppercase tracking-widest transition-all border-b-2 ${activeTab === "attending" ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
-        >
-          Attending ({joinedEvents.length})
-        </button>
-        <button 
-          onClick={() => setActiveTab("hosting")}
-          className={`pb-4 font-headline font-semibold text-xs uppercase tracking-widest transition-all border-b-2 ${activeTab === "hosting" ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
-        >
-          Hosting ({ownedEvents.length})
-        </button>
-      </div>
+        {/* Tabs */}
+        <div className="flex gap-8 border-b border-outline-variant/20">
+          <button 
+            onClick={() => setActiveTab("attending")}
+            className={`pb-4 font-headline font-semibold text-xs uppercase tracking-widest transition-all border-b-2 ${activeTab === "attending" ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
+          >
+            Attending ({joinedEvents.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab("hosting")}
+            className={`pb-4 font-headline font-semibold text-xs uppercase tracking-widest transition-all border-b-2 ${activeTab === "hosting" ? "text-primary border-primary" : "text-secondary border-transparent hover:text-on-surface"}`}
+          >
+            Hosting ({ownedEvents.length})
+          </button>
+        </div>
 
-      {/* Content */}
-      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 overflow-hidden">
-        <div className="overflow-x-auto">
-          {activeTab === "hosting" ? (
-            <table className="w-full text-left font-body text-sm border-collapse">
-              <thead className="bg-surface-container-low border-b border-outline-variant/20">
-                <tr>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Title</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Date</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Status</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface text-right">Participants</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/20">
-                {ownedEvents.length > 0 ? (
-                  ownedEvents.map((e) => (
-                    <tr key={e.id} className="hover:bg-surface-container-low/50 transition-colors group">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium text-on-surface">{e.title}</div>
-                          {e.pendingRequestsCount > 0 && (
-                            <span className="w-2 h-2 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgba(186,26,26,0.5)]"></span>
-                          )}
-                        </div>
-                        <div className="text-secondary text-xs mt-1">{e.venue}</div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="font-headline font-semibold text-on-surface">
-                          {new Date(e.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                        <div className="text-secondary text-xs mt-1">{e.time || "TBA"}</div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <StatusPill status={e.isFeatured ? "featured" : "approved"} />
-                      </td>
-                      <td className="px-6 py-5 text-right font-headline font-semibold text-on-surface">
-                         {e._count?.participations || 0}/{e.maxParticipants || '∞'}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
-                          <button 
-                            onClick={() => router.push(`/dashboard/events/${e.id}/edit`)}
-                            className="text-secondary hover:text-primary transition-colors flex items-center gap-1 font-medium"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">edit</span>
-                            Edit
-                          </button>
-                          <button 
-                            onClick={() => router.push(`/dashboard/events/${e.id}`)}
-                            className="relative text-secondary hover:text-primary transition-colors flex items-center gap-1 font-medium ml-4"
-                          >
-                            <span className="material-symbols-outlined text-[20px]">settings</span>
-                            Manage
-                            {e.pendingRequestsCount > 0 && (
-                              <span className="absolute -top-2 -right-2 bg-error text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
-                                {e.pendingRequestsCount}
+        {/* Content */}
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 overflow-hidden ambient-shadow">
+          <div className="overflow-x-auto">
+            {activeTab === "hosting" ? (
+              <>
+                <table className="w-full text-left font-body text-sm border-collapse">
+                  <thead className="bg-surface-container-low border-b border-outline-variant/20">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Title</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Date</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Status</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface text-right">Participants</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/20">
+                    {tHosting.rows.length > 0 ? (
+                      tHosting.rows.map((e) => (
+                        <tr key={e.id} className="hover:bg-surface-container-low/50 transition-colors group">
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium text-on-surface">{e.title}</div>
+                              {e.pendingRequestsCount > 0 && (
+                                <span className="w-2 h-2 bg-error rounded-full animate-pulse shadow-[0_0_8px_rgba(186,26,26,0.5)]"></span>
+                              )}
+                            </div>
+                            <div className="text-secondary text-xs mt-1">{e.venue}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="font-headline font-semibold text-on-surface">
+                              {new Date(e.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+                            <div className="text-secondary text-xs mt-1">{e.time || "TBA"}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <StatusPill status={e.isFeatured ? "featured" : "approved"} />
+                          </td>
+                          <td className="px-6 py-5 text-right font-headline font-semibold text-on-surface">
+                             {e._count?.participations || 0}/{e.maxParticipants || '∞'}
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                              <button 
+                                onClick={() => router.push(`/dashboard/events/${e.id}/edit`)}
+                                className="text-secondary hover:text-primary transition-colors flex items-center gap-1 font-medium"
+                              >
+                                <span className="material-symbols-outlined text-[20px]">edit</span>
+                                Edit
+                              </button>
+                              <button 
+                                onClick={() => router.push(`/dashboard/events/${e.id}`)}
+                                className="relative text-secondary hover:text-primary transition-colors flex items-center gap-1 font-medium ml-4"
+                              >
+                                <span className="material-symbols-outlined text-[20px]">settings</span>
+                                Manage
+                                {e.pendingRequestsCount > 0 && (
+                                  <span className="absolute -top-2 -right-2 bg-error text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                                    {e.pendingRequestsCount}
+                                  </span>
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center text-secondary">
+                          <div className="flex flex-col items-center gap-4">
+                             <span className="material-symbols-outlined text-[48px] opacity-20">event_note</span>
+                             <p>No hosted events matching your criteria.</p>
+                             <Button variant="outline" size="sm" onClick={() => handleSearch("")}>Clear Search</Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <TablePager 
+                  page={tHosting.page} 
+                  totalPages={tHosting.totalPages} 
+                  total={tHosting.total} 
+                  pageSize={tHosting.pageSize} 
+                  onChange={tHosting.setPage} 
+                />
+              </>
+            ) : (
+              <>
+                <table className="w-full text-left font-body text-sm border-collapse">
+                  <thead className="bg-surface-container-low border-b border-outline-variant/20">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Event</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Date</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Organizer</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface">Your Status</th>
+                      <th className="px-6 py-4 font-semibold text-on-surface text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/20">
+                    {tAttending.rows.length > 0 ? (
+                      tAttending.rows.map((p) => (
+                        <tr key={p.id} className="hover:bg-surface-container-low/50 transition-colors group">
+                          <td className="px-6 py-5">
+                            <div className="font-medium text-on-surface">{p.event.title}</div>
+                            <div className="text-secondary text-xs mt-1">{p.event.venue}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="font-headline font-semibold text-on-surface">
+                              {new Date(p.event.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="text-on-surface font-medium">{p.event.owner?.name}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <StatusPill status={p.status} />
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            {p.status === 'APPROVED' ? (
+                              <Link href={`/dashboard/tickets/${p.id}`}>
+                                <button className="text-primary hover:underline font-semibold text-xs uppercase tracking-wider">
+                                  View Ticket
+                                </button>
+                              </Link>
+                            ) : p.event.visibility === 'PRIVATE' && (p.event.feeCents > 0 || (p.event.fee || 0) > 0) && p.invitationStatus === 'ACCEPTED' ? (
+                              <button 
+                                onClick={() => handlePay(p.eventId)}
+                                className="bg-primary text-on-primary px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:opacity-90 transition-opacity"
+                              >
+                                Pay & Join
+                              </button>
+                            ) : (
+                              <span className="text-secondary text-xs uppercase tracking-wider">
+                                Pending
                               </span>
                             )}
-                          </button>
-                        </div>
-                        {e.pendingRequestsCount > 0 && (
-                          <div className="opacity-100 lg:group-hover:opacity-0 transition-opacity mt-1">
-                             <span className="text-[10px] text-error font-bold uppercase tracking-wider">
-                               {e.pendingRequestsCount} New Request{e.pendingRequestsCount > 1 ? 's' : ''}
-                             </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center text-secondary">
+                          <div className="flex flex-col items-center gap-4">
+                             <span className="material-symbols-outlined text-[48px] opacity-20">rocket_launch</span>
+                             <p>No joined events matching your criteria.</p>
+                             <Button variant="outline" size="sm" onClick={() => handleSearch("")}>Clear Search</Button>
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center text-secondary">
-                      <div className="flex flex-col items-center gap-4">
-                         <span className="material-symbols-outlined text-[48px] opacity-20">event_note</span>
-                         <p>You haven't created any events yet.</p>
-                         <Link href="/dashboard/events/new">
-                            <Button variant="outline" size="sm">Start Hosting</Button>
-                         </Link>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          ) : (
-            <table className="w-full text-left font-body text-sm border-collapse">
-              <thead className="bg-surface-container-low border-b border-outline-variant/20">
-                <tr>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Event</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Date</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Organizer</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface">Your Status</th>
-                  <th className="px-6 py-4 font-semibold text-on-surface text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/20">
-                {joinedEvents.length > 0 ? (
-                  joinedEvents.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-container-low/50 transition-colors group">
-                      <td className="px-6 py-5">
-                        <div className="font-medium text-on-surface">{p.event.title}</div>
-                        <div className="text-secondary text-xs mt-1">{p.event.venue}</div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="font-headline font-semibold text-on-surface">
-                          {new Date(p.event.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="text-on-surface font-medium">{p.event.owner?.name}</div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <StatusPill status={p.status} />
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        {p.status === 'APPROVED' ? (
-                          <Link href={`/dashboard/tickets/${p.id}`}>
-                            <button className="text-primary hover:underline font-semibold text-xs uppercase tracking-wider">
-                              View Ticket
-                            </button>
-                          </Link>
-                        ) : p.event.visibility === 'PRIVATE' && (p.event.feeCents > 0 || (p.event.fee || 0) > 0) && p.invitationStatus === 'ACCEPTED' ? (
-                          <button 
-                            onClick={() => handlePay(p.eventId)}
-                            className="bg-primary text-on-primary px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider hover:opacity-90 transition-opacity"
-                          >
-                            Pay & Join
-                          </button>
-                        ) : (
-                          <span className="text-secondary text-xs uppercase tracking-wider">
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center text-secondary">
-                      <div className="flex flex-col items-center gap-4">
-                         <span className="material-symbols-outlined text-[48px] opacity-20">rocket_launch</span>
-                         <p>You haven't joined any events yet.</p>
-                         <Link href="/events">
-                            <Button variant="outline" size="sm">Explore Events</Button>
-                         </Link>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <TablePager 
+                  page={tAttending.page} 
+                  totalPages={tAttending.totalPages} 
+                  total={tAttending.total} 
+                  pageSize={tAttending.pageSize} 
+                  onChange={tAttending.setPage} 
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
