@@ -63,8 +63,8 @@ export function Navbar() {
       className={`sticky top-0 z-50 bg-surface/90 backdrop-blur-md w-full transition-all duration-200 border-b
         ${scrolled ? "border-outline-variant shadow-sm" : "border-transparent"}`}
     >
-      <div className="max-w-[1440px] mx-auto px-8 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-12">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-4 md:gap-12">
           {/* Logo */}
           <Link href="/" className="text-2xl font-semibold tracking-tighter text-on-surface font-headline hover:opacity-80 transition-opacity">
             Planora
@@ -91,7 +91,7 @@ export function Navbar() {
         </div>
 
         {/* Actions Area */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-1 sm:gap-6">
           <ThemeToggle />
           
           <button
@@ -212,7 +212,7 @@ export function Navbar() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 sm:gap-6">
                   <Link 
                     href="/dashboard/events/new" 
                     className="hidden lg:flex items-center gap-2 bg-primary/5 text-primary font-headline font-semibold tracking-tighter uppercase text-xs px-4 py-2 rounded-full border border-primary/20 hover:bg-primary hover:text-on-primary transition-all duration-200"
@@ -220,21 +220,11 @@ export function Navbar() {
                     <span className="material-symbols-outlined text-[18px]">add</span>
                     Create Event
                   </Link>
-
-                  <Link 
-                    href="/dashboard" 
-                    className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150 hidden lg:block
-                      ${pathname.startsWith("/dashboard") && !pathname.includes("settings") && !pathname.includes("invitations")
-                        ? "text-primary border-b-2 border-primary pb-1" 
-                        : "text-secondary hover:text-on-surface hover:opacity-80"}`}
-                  >
-                    Dashboard
-                  </Link>
                   
                   <div className="relative" data-profile-menu>
                     <button
                       onClick={(e) => { e.stopPropagation(); setProfileOpen(o => !o); }}
-                      className="flex items-center gap-3 pl-6 border-l border-outline-variant"
+                      className="flex items-center gap-3 md:pl-6 md:border-l border-outline-variant"
                     >
                       <div className="hidden sm:flex flex-col items-end">
                         <span className="text-[12px] font-bold text-on-surface leading-tight">{user.name}</span>
@@ -279,10 +269,10 @@ export function Navbar() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-6">
+              <div className="hidden md:flex items-center gap-6">
                  <Link 
                   href="/login" 
-                  className="font-headline font-semibold tracking-tighter uppercase text-sm text-secondary hover:text-on-surface hover:opacity-80 transition-opacity"
+                  className="font-headline font-semibold tracking-tighter uppercase text-sm text-secondary hover:text-on-surface transition-opacity whitespace-nowrap"
                 >
                   Log In
                 </Link>
@@ -300,23 +290,42 @@ export function Navbar() {
 
       {/* Mobile Menu Drawer */}
       {mobileOpen && mounted && (
-        <div className="md:hidden border-t border-outline-variant bg-surface animate-slide-up">
-          <div className="px-8 py-4 flex flex-col gap-1">
+        <div className="md:hidden border-t border-outline-variant bg-surface animate-slide-up shadow-2xl">
+          <div className="px-6 py-8 flex flex-col gap-2">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-headline font-semibold text-sm uppercase tracking-tighter py-3 text-on-surface hover:text-primary transition-colors"
+                className="font-headline font-bold text-lg uppercase tracking-tighter py-4 px-4 rounded-xl text-on-surface hover:bg-surface-container-low transition-all"
               >
                 {link.label}
               </Link>
             ))}
             {!user && (
-              <>
-                <div className="h-px bg-outline-variant my-2" />
-                <Link href="/login" className="py-3 text-on-surface font-headline font-semibold text-sm uppercase">Log In</Link>
-                <Link href="/register" className="py-3 text-primary font-headline font-semibold text-sm uppercase">Sign Up</Link>
-              </>
+              <div className="flex flex-col gap-3 mt-8 pt-8 border-t border-outline-variant/30">
+                <Link href="/login">
+                  <Button variant="outline" className="w-full justify-center text-sm py-4">Log In</Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="w-full bg-gradient-primary justify-center text-sm py-4">Sign Up</Button>
+                </Link>
+              </div>
+            )}
+            {user && (
+              <div className="flex flex-col gap-3 mt-8 pt-8 border-t border-outline-variant/30">
+                <Link 
+                  href="/dashboard" 
+                  className="w-full py-4 px-4 rounded-xl bg-primary/5 text-primary font-bold uppercase text-xs tracking-widest text-center"
+                >
+                  Go to Dashboard
+                </Link>
+                <button
+                  onClick={() => logout()}
+                  className="w-full py-4 px-4 rounded-xl bg-error/5 text-error font-bold uppercase text-xs tracking-widest text-center"
+                >
+                  Log Out
+                </button>
+              </div>
             )}
           </div>
         </div>

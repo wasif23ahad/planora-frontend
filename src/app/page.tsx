@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/ui/Button";
 import { CategoryPill } from "@/components/ui/Pill";
 import { EventCard } from "@/components/events/EventCard";
@@ -65,11 +66,13 @@ export default function Homepage() {
     }
   };
 
+  const { showToast } = useToast();
+
   if (loading) return (
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 md:py-24 space-y-32">
       {/* Hero skeleton */}
-      <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow min-h-[60vh] max-h-[70vh]">
-        <div className="md:col-span-5 h-[400px] md:h-[500px] bg-surface-container-low animate-pulse" />
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow min-h-[60vh] md:max-h-[70vh]">
+        <div className="md:col-span-5 h-[320px] md:h-full bg-surface-container-low animate-pulse" />
         <div className="md:col-span-7 p-8 md:p-16 space-y-6">
           <div className="h-6 w-32 bg-surface-container-low animate-pulse rounded-full" />
           <div className="h-14 w-3/4 bg-surface-container-low animate-pulse rounded-lg" />
@@ -77,7 +80,7 @@ export default function Homepage() {
           <div className="h-12 w-40 bg-surface-container-low animate-pulse rounded-lg mt-6" />
         </div>
       </section>
-
+      
       {/* Stats skeleton */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
@@ -111,8 +114,8 @@ export default function Homepage() {
       
       {/* ── 01: HERO SECTION ───────────────────────────────────── */}
       {heroEvent && (
-        <section className="reveal min-h-[60vh] max-h-[70vh] grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow">
-          <div className="md:col-span-5 h-full relative overflow-hidden bg-surface-container-high">
+        <section className="reveal min-h-[60vh] md:max-h-[70vh] grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-8 items-stretch bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow">
+          <div className="md:col-span-5 h-80 md:h-auto relative overflow-hidden bg-surface-container-high shrink-0">
             {heroEvent.coverImage ? (
               <Image 
                 src={heroEvent.coverImage} 
@@ -129,14 +132,14 @@ export default function Homepage() {
           </div>
           <div className="md:col-span-7 p-8 md:p-16 flex flex-col justify-center items-start">
             <CategoryPill type={heroEvent.visibility} fee={heroFee} />
-            <h1 className="font-headline text-5xl md:text-6xl font-semibold tracking-[-0.04em] leading-[1.1] my-6 text-on-surface">
+            <h1 className="font-headline text-4xl md:text-6xl font-semibold tracking-[-0.04em] leading-[1.1] my-6 text-on-surface">
               {heroEvent.title}
             </h1>
             <div className="flex items-center gap-2 text-secondary mb-6 font-headline font-semibold text-lg tracking-[-0.02em]">
               <span className="material-symbols-outlined text-[20px]">calendar_today</span>
               {new Date(heroEvent.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
-            <p className="text-on-surface-variant text-lg leading-[1.6] mb-10 max-w-xl line-clamp-3">
+            <p className="text-on-surface-variant text-base md:text-lg leading-[1.6] mb-10 max-w-xl line-clamp-3">
               {heroEvent.description || "Join us for an evening of shared learning and collective building. Bring your current project, meet fellow creators, and collaborate in an inspiring environment."}
             </p>
             <Link href={`/events/${heroEvent.id}`}>
@@ -351,7 +354,10 @@ export default function Homepage() {
           <p className="opacity-90 mt-2 max-w-md">A short email every Friday with the best events of the week. No spam.</p>
         </div>
         <form
-          onSubmit={(e) => { e.preventDefault(); alert("Subscribed (demo)."); }}
+          onSubmit={(e) => { 
+            e.preventDefault(); 
+            showToast("Subscribed! You'll receive our weekly drop soon.", "success");
+          }}
           className="flex gap-2 w-full md:w-auto md:min-w-[420px]"
         >
           <input
