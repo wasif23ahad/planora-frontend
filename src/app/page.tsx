@@ -52,11 +52,34 @@ export default function Homepage() {
   };
 
   if (loading) return (
-    <div className="flex-1 flex items-center justify-center bg-surface">
-      <div className="animate-pulse flex flex-col items-center gap-4">
-        <div className="text-2xl font-headline font-bold text-on-surface">Planora</div>
-        <div className="text-sm text-secondary">Loading community…</div>
-      </div>
+    <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 md:py-24 space-y-32">
+      {/* Hero skeleton */}
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow min-h-[60vh] max-h-[70vh]">
+        <div className="md:col-span-5 h-[400px] md:h-[500px] bg-surface-container-low animate-pulse" />
+        <div className="md:col-span-7 p-8 md:p-16 space-y-6">
+          <div className="h-6 w-32 bg-surface-container-low animate-pulse rounded-full" />
+          <div className="h-14 w-3/4 bg-surface-container-low animate-pulse rounded-lg" />
+          <div className="h-4 w-2/3 bg-surface-container-low animate-pulse rounded" />
+          <div className="h-12 w-40 bg-surface-container-low animate-pulse rounded-lg mt-6" />
+        </div>
+      </section>
+
+      {/* Stats skeleton */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-24 bg-surface-container-low animate-pulse rounded-xl" />
+        ))}
+      </section>
+
+      {/* Card grid skeleton */}
+      <section>
+        <div className="h-9 w-64 bg-surface-container-low animate-pulse rounded mb-10" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-[400px] bg-surface-container-low animate-pulse rounded-xl" />
+          ))}
+        </div>
+      </section>
     </div>
   );
 
@@ -238,8 +261,8 @@ export default function Homepage() {
         </div>
 
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.slice(0, 6).map((e) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filtered.slice(0, 8).map((e) => (
               <EventCard key={e.id} event={e} />
             ))}
           </div>
@@ -249,7 +272,7 @@ export default function Homepage() {
           </div>
         )}
 
-        {filtered.length > 6 && (
+        {filtered.length > 8 && (
           <div className="mt-12 text-center">
             <Link href="/events">
               <Button variant="outline">Load more</Button>
