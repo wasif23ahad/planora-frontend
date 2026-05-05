@@ -141,7 +141,7 @@ export default function AdminOverviewPage() {
               </Pie>
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(v: number) => [`৳${v.toLocaleString()}`, "Revenue"]}
+                formatter={(v: any) => [`৳${Number(v).toLocaleString()}`, "Revenue"]}
               />
               <Legend
                 verticalAlign="bottom"
