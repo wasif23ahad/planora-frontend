@@ -72,11 +72,10 @@ export default function Homepage() {
   return (
     <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 md:py-24 space-y-32">
       
-      {/* ── HERO SECTION ───────────────────────────────────── */}
-      {/* ... (keep existing hero code) ... */}
+      {/* ── 01: HERO SECTION ───────────────────────────────────── */}
       {heroEvent && (
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant/20 overflow-hidden ambient-shadow">
-          <div className="md:col-span-5 h-[400px] md:h-full relative overflow-hidden bg-surface-container-high">
+        <section className="min-h-[60vh] max-h-[70vh] grid grid-cols-1 md:grid-cols-12 gap-8 items-center bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden ambient-shadow">
+          <div className="md:col-span-5 h-full relative overflow-hidden bg-surface-container-high">
             {heroEvent.coverImage ? (
               <Image 
                 src={heroEvent.coverImage} 
@@ -110,7 +109,46 @@ export default function Homepage() {
         </section>
       )}
 
-      {/* ── UPCOMING EVENTS SLIDER ─────────────────────────── */}
+      {/* ── 02: STATS STRIP ────────────────────────────────────── */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Active events", value: events.length },
+          { label: "Hosts", value: new Set(events.map(e => e.owner?.name).filter(Boolean)).size },
+          { label: "Cities", value: new Set(events.map(e => (e.venue || "").split(",").pop()?.trim()).filter(Boolean)).size },
+          { label: "Categories", value: new Set(events.map(e => e.category).filter(Boolean)).size },
+        ].map((s, i) => (
+          <div key={i} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 ambient-shadow">
+            <div className="font-headline font-bold text-3xl tabular-nums text-on-surface">{s.value}</div>
+            <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mt-1">{s.label}</div>
+          </div>
+        ))}
+      </section>
+
+      {/* ── 03: CATEGORIES GRID ────────────────────────────────── */}
+      <section>
+        <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface mb-8">Browse by category</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[
+            { label: "Technology", icon: "computer" },
+            { label: "Coding",     icon: "terminal" },
+            { label: "Networking", icon: "groups" },
+            { label: "Food",       icon: "restaurant" },
+            { label: "Arts",       icon: "palette" },
+            { label: "Sports",     icon: "sports_soccer" },
+          ].map(c => (
+            <Link
+              key={c.label}
+              href={`/events?category=${encodeURIComponent(c.label)}`}
+              className="group bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col items-center gap-3 hover:border-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-[32px] text-primary group-hover:scale-110 transition-transform">{c.icon}</span>
+              <span className="text-sm font-headline font-semibold text-on-surface">{c.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 04: UPCOMING EVENTS SLIDER ─────────────────────────── */}
       <section>
         <div className="flex justify-between items-end mb-10">
           <h2 className="font-headline text-4xl font-semibold tracking-[-0.03em] text-on-surface">Upcoming events</h2>
@@ -153,7 +191,31 @@ export default function Homepage() {
         )}
       </section>
 
-      {/* ── CATEGORY FILTER & GRID ────────────────────────── */}
+      {/* ── 05: HOW IT WORKS ───────────────────────────────────── */}
+      <section>
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">How Planora works</h2>
+          <p className="text-secondary mt-3">Three steps from idea to packed room.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { step: "01", title: "Discover", body: "Browse events by category, city, or vibe. Filter by free or paid, public or private.", icon: "search" },
+            { step: "02", title: "Join",     body: "RSVP free events instantly or pay securely with SSLCommerz for ticketed ones.", icon: "confirmation_number" },
+            { step: "03", title: "Show up",  body: "Get a digital ticket, leave a review afterwards, and follow hosts you love.", icon: "celebration" },
+          ].map(s => (
+            <div key={s.step} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col gap-4 ambient-shadow">
+              <div className="flex items-center justify-between">
+                <span className="material-symbols-outlined text-[28px] text-primary">{s.icon}</span>
+                <span className="font-headline font-bold text-secondary text-sm">{s.step}</span>
+              </div>
+              <h3 className="font-headline font-semibold text-xl text-on-surface">{s.title}</h3>
+              <p className="text-secondary text-sm leading-relaxed">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 06: CATEGORY FILTER & GRID ────────────────────────── */}
       <section>
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-outline-variant/30 mb-10">
           <nav className="flex gap-8 overflow-x-auto hide-scrollbar">
@@ -196,7 +258,78 @@ export default function Homepage() {
         )}
       </section>
 
-      {/* ── CTA SECTION ───────────────────────────────────── */}
+      {/* ── 07: TESTIMONIALS ───────────────────────────────────── */}
+      <section>
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">What people say</h2>
+          <p className="text-secondary mt-3">From hosts and attendees who use Planora every week.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { quote: "I ran my first 50-person hackathon in two weekends. Ticketing, invites, reminders — handled.", name: "Tasnim R.", role: "Hackathon organizer" },
+            { quote: "Found a photography walk in Old Dhaka that I never would have discovered otherwise. The category filters are genuinely useful.", name: "Arif H.", role: "Attendee" },
+            { quote: "Private dinners with controlled invitations were what we needed. The RSVP approval flow is exactly right.", name: "Maya K.", role: "Founder, Supper Club" },
+          ].map((t, i) => (
+            <figure key={i} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col gap-4 ambient-shadow">
+              <span className="material-symbols-outlined text-accent text-[28px]">format_quote</span>
+              <blockquote className="text-on-surface leading-relaxed text-sm">{t.quote}</blockquote>
+              <figcaption className="mt-auto pt-3 border-t border-outline-variant">
+                <div className="text-sm font-semibold text-on-surface">{t.name}</div>
+                <div className="text-xs text-secondary">{t.role}</div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 08: FAQ ────────────────────────────────────────────── */}
+      <section className="grid grid-cols-1 md:grid-cols-12 gap-12">
+        <div className="md:col-span-4">
+          <h2 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">Frequently asked</h2>
+          <p className="text-secondary mt-3">If yours isn't here, ask us in <Link href="/contact" className="text-primary underline underline-offset-4">Contact</Link>.</p>
+        </div>
+        <div className="md:col-span-8 flex flex-col gap-3">
+          {[
+            { q: "Is Planora free to use?", a: "Yes for attendees. Hosts pay nothing to list events; we earn a small fee on paid ticket sales handled through SSLCommerz." },
+            { q: "How do private events work?", a: "A private event is invite-only. Hosts send email invitations from the event's manage page. Invitees see the event in their dashboard and can accept, decline, or pay if it's a paid event." },
+            { q: "Can I cancel a paid ticket?", a: "Refunds are at the host's discretion. Reach out to the host via the event page; if needed our support team can mediate." },
+            { q: "Do you support multiple cities?", a: "Yes. Events list a venue with a city; the explore page lets you filter by it. We're focused on Dhaka but accept events anywhere." },
+            { q: "Can I host without paying?", a: "Free events cost nothing to publish. There's no monthly subscription — only the per-ticket fee on paid events." },
+          ].map((f, i) => (
+            <details key={i} className="group bg-surface-container-lowest border border-outline-variant rounded-xl p-5 hover:border-primary/40 transition-colors">
+              <summary className="cursor-pointer flex items-center justify-between font-semibold text-on-surface list-none">
+                <span>{f.q}</span>
+                <span className="material-symbols-outlined text-secondary group-open:rotate-45 transition-transform">add</span>
+              </summary>
+              <p className="mt-3 text-secondary text-sm leading-relaxed">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* ── 09: NEWSLETTER ─────────────────────────────────────── */}
+      <section className="bg-primary text-on-primary rounded-xl p-10 md:p-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <h3 className="font-headline text-3xl font-semibold tracking-tighter">Get the weekly drop</h3>
+          <p className="opacity-90 mt-2 max-w-md">A short email every Friday with the best events of the week. No spam.</p>
+        </div>
+        <form
+          onSubmit={(e) => { e.preventDefault(); alert("Subscribed (demo)."); }}
+          className="flex gap-2 w-full md:w-auto md:min-w-[420px]"
+        >
+          <input
+            type="email"
+            required
+            placeholder="you@example.com"
+            className="flex-1 bg-white/10 border border-white/30 placeholder:text-on-primary/60 text-on-primary rounded-lg px-4 py-3 text-sm focus:bg-white/15 outline-none transition-colors"
+          />
+          <button type="submit" className="bg-on-primary text-primary font-semibold uppercase tracking-wider text-xs px-5 py-3 rounded-lg hover:opacity-90 transition-opacity">
+            Subscribe
+          </button>
+        </form>
+      </section>
+
+      {/* ── 10: CTA SECTION ───────────────────────────────────── */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Link href="/dashboard" className="bg-surface-container border border-outline-variant/20 rounded-xl p-10 md:p-16 hover:border-accent transition-all group flex flex-col items-start cursor-pointer">
           <span className="material-symbols-outlined text-[48px] text-accent mb-6 group-hover:scale-110 transition-transform">add_circle</span>
