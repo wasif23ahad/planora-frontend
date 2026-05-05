@@ -40,25 +40,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {user.role === "MANAGER" ? "Manager Panel" : "Admin Panel"}
             </div>
             <nav className="flex flex-col gap-1 px-2">
-              {sidebarItems.map(item => {
-                const isActive = pathname === item.href || (pathname === "/admin" && item.href === "/admin/overview");
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 text-[14px] transition-all rounded-xl
-                      ${isActive
-                        ? "bg-primary/10 text-primary font-bold"
-                        : "text-secondary font-medium hover:bg-surface-container-low hover:text-on-surface"}`}
-                  >
-                    <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-primary' : 'text-secondary/60'}`}
-                          style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>
-                      {item.icon}
-                    </span>
-                    {item.label}
-                  </Link>
-                );
-              })}
+              {sidebarItems
+                .filter(item => {
+                  if (user.role === "MANAGER") {
+                    return !["users", "messages"].includes(item.key);
+                  }
+                  return true;
+                })
+                .map(item => {
+                  const isActive = pathname === item.href || (pathname === "/admin" && item.href === "/admin/overview");
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-4 py-3 text-[14px] transition-all rounded-xl
+                        ${isActive
+                          ? "bg-primary/10 text-primary font-bold"
+                          : "text-secondary font-medium hover:bg-surface-container-low hover:text-on-surface"}`}
+                    >
+                      <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-primary' : 'text-secondary/60'}`}
+                            style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}>
+                        {item.icon}
+                      </span>
+                      {item.label}
+                    </Link>
+                  );
+                })}
             </nav>
             <div className="border-t border-outline-variant/10 mt-6 pt-4 px-2 flex flex-col gap-1">
               <Link href="/" className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-secondary hover:text-on-surface hover:bg-surface-container-low rounded-xl transition-all">

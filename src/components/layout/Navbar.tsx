@@ -16,11 +16,9 @@ const loggedOutLinks = [
 ];
 
 const loggedInLinks = [
-  { label: "Events",      href: "/events" },
+  { label: "Explore",     href: "/events" },
   { label: "Dashboard",   href: "/dashboard" },
-  { label: "My Tickets",  href: "/dashboard/events" },
   { label: "Invitations", href: "/dashboard/invitations" },
-  { label: "About",       href: "/about" },
   { label: "Help",        href: "/help" },
 ];
 
@@ -210,9 +208,17 @@ export function Navbar() {
 
               <div className="flex items-center gap-6">
                 <Link 
+                  href="/dashboard/events/new" 
+                  className="hidden lg:flex items-center gap-2 bg-primary/5 text-primary font-headline font-semibold tracking-tighter uppercase text-xs px-4 py-2 rounded-full border border-primary/20 hover:bg-primary hover:text-on-primary transition-all duration-200"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  Create Event
+                </Link>
+
+                <Link 
                   href="/dashboard" 
                   className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150 hidden lg:block
-                    ${pathname.startsWith("/dashboard") 
+                    ${pathname.startsWith("/dashboard") && !pathname.includes("settings") && !pathname.includes("invitations")
                       ? "text-primary border-b-2 border-primary pb-1" 
                       : "text-secondary hover:text-on-surface hover:opacity-80"}`}
                 >
