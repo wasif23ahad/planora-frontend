@@ -127,7 +127,7 @@ export default function UserModerationPage() {
                 <tr key={u.id} className="hover:bg-surface-container-low/30 transition-colors group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-fixed flex items-center justify-center text-sm font-bold shadow-sm">
+                      <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold shadow-sm">
                         {u.name[0]}
                       </div>
                       <span className="font-headline font-bold text-on-surface text-base">{u.name}</span>

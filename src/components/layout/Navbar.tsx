@@ -57,7 +57,7 @@ export function Navbar() {
 
   return (
     <nav 
-      className={`sticky top-0 z-50 bg-surface w-full transition-all duration-200 border-b
+      className={`sticky top-0 z-50 bg-surface/90 backdrop-blur-md w-full transition-all duration-200 border-b
         ${scrolled ? "border-outline-variant shadow-sm" : "border-transparent"}`}
     >
       <div className="max-w-[1440px] mx-auto px-8 py-4 flex justify-between items-center">
