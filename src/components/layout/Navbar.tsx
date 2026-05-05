@@ -21,7 +21,7 @@ const loggedInLinks = [
   { label: "My Tickets",  href: "/dashboard/events" },
   { label: "Invitations", href: "/dashboard/invitations" },
   { label: "About",       href: "/about" },
-  { label: "Help",        href: "/help" },
+  { label: "Contact",     href: "/contact" },
 ];
 
 export function Navbar() {

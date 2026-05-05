@@ -105,6 +105,7 @@ export default function LoginPage() {
                  label="" // Label handled above
                  type="password"
                  placeholder="••••••••"
+                 autoComplete="current-password"
                  {...register("password")}
                  error={errors.password?.message}
                />

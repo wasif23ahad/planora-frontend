@@ -48,6 +48,7 @@ export default function AboutPage() {
                  <img 
                     src="/ceo-profile.jpg" 
                     alt="Wasif Ahad - Planora CEO" 
+                    loading="lazy"
                     className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700 hover:scale-105"
                  />
               </div>
