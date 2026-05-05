@@ -101,13 +101,20 @@ function EventsPage() {
     setPage(1);
   };
 
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
-    <main className="max-w-[1440px] mx-auto px-4 md:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-12">
+    <main className="max-w-[1440px] mx-auto px-4 md:px-8 py-8 md:py-16 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
 
       {/* Sidebar filters */}
-      <aside className="md:col-span-3 space-y-10">
-        <div className="md:sticky md:top-28 space-y-8">
-          <h2 className="font-headline text-2xl font-semibold text-on-surface">Filters</h2>
+      <aside className={`md:col-span-3 space-y-10 ${showFilters ? 'block' : 'hidden md:block'}`}>
+        <div className="md:sticky md:top-28 space-y-8 bg-surface-container-low p-6 md:p-0 rounded-2xl md:rounded-none border md:border-0 border-outline-variant/30">
+          <div className="flex justify-between items-center">
+            <h2 className="font-headline text-2xl font-semibold text-on-surface">Filters</h2>
+            <button className="md:hidden text-secondary" onClick={() => setShowFilters(false)}>
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
 
           {/* Category */}
           <div className="space-y-3">
@@ -160,7 +167,7 @@ function EventsPage() {
             </div>
           </div>
 
-          <Button variant="outline" size="sm" className="w-full" onClick={reset}>Reset filters</Button>
+          <Button variant="outline" size="sm" className="w-full" onClick={() => { reset(); setShowFilters(false); }}>Reset filters</Button>
         </div>
       </aside>
 
@@ -169,9 +176,18 @@ function EventsPage() {
 
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-          <div>
-            <h1 className="font-headline text-4xl font-semibold tracking-tighter text-on-surface">Discover events</h1>
-            <p className="text-secondary text-sm font-medium">Showing {visible.length} of {total} upcoming experiences</p>
+          <div className="flex justify-between items-end w-full md:w-auto">
+            <div>
+              <h1 className="font-headline text-3xl md:text-4xl font-semibold tracking-tighter text-on-surface">Discover events</h1>
+              <p className="text-secondary text-sm font-medium">Showing {visible.length} of {total} upcoming experiences</p>
+            </div>
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="md:hidden flex items-center gap-2 bg-surface-container-low px-4 py-2 rounded-lg border border-outline-variant text-sm font-semibold"
+            >
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+              Filters
+            </button>
           </div>
           <div className="w-full md:w-auto flex flex-col sm:flex-row gap-4 grow max-w-xl">
             <div className="relative grow">
