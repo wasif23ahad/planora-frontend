@@ -8,16 +8,29 @@ import { Button } from "@/components/ui/Button";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-const navLinks = [
-  { label: "Events", href: "/events" },
-  { label: "About", href: "/about" },
+const loggedOutLinks = [
+  { label: "Events",     href: "/events" },
+  { label: "Categories", href: "/events?cat=all" },
+  { label: "About",      href: "/about" },
+  { label: "Contact",    href: "/contact" },
+];
+
+const loggedInLinks = [
+  { label: "Events",      href: "/events" },
+  { label: "Dashboard",   href: "/dashboard" },
+  { label: "My Tickets",  href: "/dashboard/events" },
+  { label: "Invitations", href: "/dashboard/invitations" },
+  { label: "About",       href: "/about" },
+  { label: "Help",        href: "/help" },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { stats: notifications, dismissUpcomingEvent, markAsRead } = useNotifications();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,6 +39,19 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  // outside-click handler for profile menu
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement)?.closest('[data-profile-menu]')) setProfileOpen(false);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
+  const links = user ? loggedInLinks : loggedOutLinks;
 
   // Removed isAuthPage check to allow Navbar on all pages as requested
 
@@ -43,8 +69,8 @@ export function Navbar() {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex gap-8 items-center">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+            {links.map((link) => {
+              const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href.split("?")[0]) && link.href !== "/events");
               return (
                 <Link
                   key={link.href}
@@ -64,6 +90,15 @@ export function Navbar() {
         {/* Actions Area */}
         <div className="flex items-center gap-6">
           <ThemeToggle />
+          
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            className="md:hidden w-10 h-10 rounded-full flex items-center justify-center text-secondary hover:bg-surface-container-low"
+            aria-label="Open menu"
+          >
+            <span className="material-symbols-outlined text-[24px]">{mobileOpen ? "close" : "menu"}</span>
+          </button>
+
           {user ? (
             <div className="flex items-center gap-4">
               <div className="relative group">
@@ -176,7 +211,7 @@ export function Navbar() {
               <div className="flex items-center gap-6">
                 <Link 
                   href="/dashboard" 
-                  className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150 hidden sm:block
+                  className={`font-headline font-semibold tracking-tighter uppercase text-sm transition-all duration-150 hidden lg:block
                     ${pathname.startsWith("/dashboard") 
                       ? "text-primary border-b-2 border-primary pb-1" 
                       : "text-secondary hover:text-on-surface hover:opacity-80"}`}
@@ -184,18 +219,49 @@ export function Navbar() {
                   Dashboard
                 </Link>
                 
-                <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/20">
-                   <div className="hidden sm:flex flex-col items-end">
-                     <span className="text-[12px] font-bold text-on-surface leading-tight">
-                       {user.name}
-                     </span>
-                     <span className="text-[10px] text-secondary font-medium tracking-wide uppercase">
-                       {user.role}
-                     </span>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-[13px] shadow-sm">
-                    {user.name[0]}
-                  </div>
+                <div className="relative" data-profile-menu>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setProfileOpen(o => !o); }}
+                    className="flex items-center gap-3 pl-6 border-l border-outline-variant"
+                  >
+                    <div className="hidden sm:flex flex-col items-end">
+                      <span className="text-[12px] font-bold text-on-surface leading-tight">{user.name}</span>
+                      <span className="text-[10px] text-secondary font-medium tracking-wide uppercase">{user.role}</span>
+                    </div>
+                    <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-[13px] shadow-sm">
+                      {user.name[0]}
+                    </div>
+                  </button>
+
+                  {profileOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl py-2 z-50 animate-slide-up">
+                      <div className="px-4 py-3 border-b border-outline-variant">
+                        <div className="text-sm font-bold text-on-surface">{user.name}</div>
+                        <div className="text-xs text-secondary truncate">{user.email}</div>
+                      </div>
+                      <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                        <span className="material-symbols-outlined text-[20px] text-secondary">dashboard</span> Dashboard
+                      </Link>
+                      <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                        <span className="material-symbols-outlined text-[20px] text-secondary">person</span> Profile Settings
+                      </Link>
+                      <Link href="/dashboard/invitations" className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                        <span className="material-symbols-outlined text-[20px] text-secondary">mail</span> Invitations
+                      </Link>
+                      {user.role === "ADMIN" && (
+                        <Link href="/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors">
+                          <span className="material-symbols-outlined text-[20px] text-secondary">admin_panel_settings</span> Admin Panel
+                        </Link>
+                      )}
+                      <div className="h-px bg-outline-variant my-1" />
+                      <button
+                        onClick={() => { logout(); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 text-left transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">logout</span> Log Out
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -217,6 +283,30 @@ export function Navbar() {
           )}
         </div>
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-outline-variant bg-surface animate-slide-up">
+          <div className="px-8 py-4 flex flex-col gap-1">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-headline font-semibold text-sm uppercase tracking-tighter py-3 text-on-surface hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+            {!user && (
+              <>
+                <div className="h-px bg-outline-variant my-2" />
+                <Link href="/login" className="py-3 text-on-surface font-headline font-semibold text-sm uppercase">Log In</Link>
+                <Link href="/register" className="py-3 text-primary font-headline font-semibold text-sm uppercase">Sign Up</Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
