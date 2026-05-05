@@ -64,6 +64,8 @@ export function Footer() {
         <div className="flex flex-col gap-4">
           <h4 className="font-headline font-semibold text-on-surface text-xs uppercase tracking-widest">Resources</h4>
           <div className="flex flex-col gap-2">
+            <Link href="/help" className="text-secondary hover:text-primary transition-colors">Help center</Link>
+            <Link href="/blog" className="text-secondary hover:text-primary transition-colors">Blog</Link>
             <Link href="/about" className="text-secondary hover:text-primary transition-colors">About</Link>
             <Link href="/legal" className="text-secondary hover:text-primary transition-colors">Privacy &amp; Terms</Link>
             <Link href="/contact" className="text-secondary hover:text-primary transition-colors">Contact</Link>

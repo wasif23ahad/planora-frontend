@@ -3,9 +3,11 @@
 Planora is a modern, responsive, and robust full-stack web application designed for seamless event management. It allows users to discover, join, and pay for events, while empowering event owners and administrators to manage participants and moderate the platform.
 
 ### 🌐 Live URLs
+
 - **Frontend Live**: [https://planora-frontend-green.vercel.app](https://planora-frontend-green.vercel.app)
 - **Backend Live**: [https://planora-backend-sigma.vercel.app](https://planora-backend-sigma.vercel.app)
-- **Live Demo**: [https://www.youtube.com/watch?v=kT40fyVPrqk](https://www.youtube.com/watch?v=kT40fyVPrqk)
+- **Frontend Repo**: [https://github.com/wasif23ahad/planora-frontend](https://github.com/wasif23ahad/planora-frontend)
+- **Backend Repo**: [https://github.com/wasif23ahad/planora-backend](https://github.com/wasif23ahad/planora-backend)
 
 ---
 
@@ -74,7 +76,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ---
 
-## 👨‍💻 Admin Credentials for Testing
-To evaluate the RBAC functionality, you can log in using the pre-seeded admin account:
-*   **Email**: `admin@planora.com`
-*   **Password**: `password123`
+## 👨‍💻 Demo Credentials for Testing
+
+The platform has three roles, each with a seeded demo account. Click the matching role button on the login page to autofill credentials.
+
+| Role    | Email                  | Password    | Can do |
+|---------|------------------------|-------------|--------|
+| User    | user@planora.com       | password123 | Browse, join, pay, host events, write reviews |
+| Manager | manager@planora.com    | password123 | Read all events/users, toggle featured, read reviews and support messages |
+| Admin   | admin@planora.com      | password123 | Everything, including suspend / delete users and delete events |

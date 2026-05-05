@@ -39,7 +39,7 @@ export default function AdminMessagesPage() {
 
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <div className="relative flex-grow w-full md:w-auto">
+        <div className="relative grow w-full md:w-auto">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-[20px]">search</span>
           <input
             value={t.search}
@@ -78,7 +78,7 @@ export default function AdminMessagesPage() {
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-[10px] font-bold text-secondary uppercase tracking-[0.1em] mb-2">Submitted</div>
+                  <div className="text-[10px] font-bold text-secondary uppercase tracking-widest mb-2">Submitted</div>
                   <div className="text-on-surface font-medium text-xs">
                     {new Date(msg.createdAt).toLocaleDateString("en-US", { 
                       month: 'short', day: 'numeric', year: 'numeric',

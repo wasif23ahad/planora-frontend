@@ -37,7 +37,7 @@ export default function AdminReviewsPage() {
 
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <div className="relative flex-grow w-full md:w-auto">
+        <div className="relative grow w-full md:w-auto">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-[20px]">search</span>
           <input
             value={t.search}
